@@ -1,6 +1,7 @@
 // Board struct using bitboards to represent the othello board
+use std::fmt;
 
-
+#[derive(Clone)]
 struct Board {
     // 00 01 02 03 04 05 06 07
     // 08 09 10 11 12 13 14 15
@@ -17,6 +18,29 @@ struct Board {
     black: u64,
     turn: bool,
 }
+
+impl fmt::Display for Board {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        writeln!(f, "Turn: {}", if self.turn { "Black" } else { "White" })?;
+        for row in 0..8 {
+            for col in 0..8 {
+                let index = row * 8 + col;
+                let mask = 1 << index;
+                let piece = if self.white & mask != 0 {
+                    'W' // White piece
+                } else if self.black & mask != 0 {
+                    'B' // Black piece
+                } else {
+                    '.' // Empty square
+                };
+                write!(f, "{} ", piece)?;
+            }
+            writeln!(f)?; // Newline at end of row
+        }
+        Ok(())
+    }
+}
+
 fn printu64(number: u64) {
     for i in 0..8 {
         for j in 0..8 {
@@ -27,7 +51,7 @@ fn printu64(number: u64) {
     }
 }
 
-fn possible_moves(board: &Board) -> u64 {
+fn possible_plys(board: &Board) -> u64 {
     let player = if board.turn { board.black } else { board.white};
     let opponent = if board.turn { board.white } else { board.black };
     let total = player | opponent;
@@ -82,6 +106,79 @@ fn possible_moves(board: &Board) -> u64 {
     return n | s | e | w | ne | nw | se | sw;
 }
 
+fn play(board: &Board, ply: u64) -> Board {
+
+    // Playes the ply on the board.
+    //
+    // If the ply is not valid, the board is returned unchanged.
+    //
+    // Arguments:
+    //  - board: The current board state
+    //  - ply: The move to play
+    //
+    // Returns:
+    // - The new board state
+    let player = if board.turn { board.black } else { board.white};
+    let opponent = if board.turn { board.white } else { board.black };
+
+    let total = player | opponent;
+
+    if (total & ply) != 0 {
+        return board.clone();
+    }
+
+    let t: u64 = 0xFFFFFFFFFFFFFF00;
+    let b: u64 = 0x00FFFFFFFFFFFFFF;
+    let r: u64 = 0x7F7F7F7F7F7F7F7F;
+    let l: u64 = 0xFEFEFEFEFEFEFEFE;
+
+    let mut n = ply >> 8 & opponent & t; let mut nr = player << 8 & opponent & b;
+    let mut ne = ply >> 7 & opponent & r & t; let mut ner = player << 7 & opponent & l & b;
+    let mut e = ply << 1 & opponent & r; let mut er = player >> 1 & opponent & l;
+    let mut se = ply << 9 & opponent & r & b; let mut ser = player >> 9 & opponent & l & t;
+    let mut s = ply << 8 & opponent & b; let mut sr = player >> 8 & opponent & t;
+    let mut sw = ply << 7 & opponent & l & b; let mut swr = player >> 7 & opponent & r & t;
+    let mut w = ply >> 1 & opponent & l; let mut wr = player << 1 & opponent & r;
+    let mut nw = ply >> 9 & opponent & l & t; let mut nwr = player << 9 & opponent & r & b;
+
+    for _ in 0..6 {
+        n |= n >> 8 & opponent & t; nr |= nr << 8 & opponent & b;
+        ne |= ne >> 7 & opponent & r & t; ner |= ner << 7 & opponent & l & b;
+        e |= e << 1 & opponent & r; er |= er >> 1 & opponent & l;
+        se |= se << 9 & opponent & r & b; ser |= ser >> 9 & opponent & l & t;
+        s |= s << 8 & opponent & b; sr |= sr >> 8 & opponent & t;
+        sw |= sw << 7 & opponent & l & b; swr |= swr >> 7 & opponent & r & t;
+        w |= w >> 1 & opponent & l; wr |= wr << 1 & opponent & r;
+        nw |= nw >> 9 & opponent & l & t; nwr |= nwr << 9 & opponent & r & b;
+    }
+
+    n = n & nr;
+    ne = ne & ner;
+    e = e & er;
+    se = se & ser;
+    s = s & sr;
+    sw = sw & swr;
+    w = w & wr;
+    nw = nw & nwr;
+
+    let flip = n | ne | e | se | s | sw | w | nw;
+
+    if flip == 0 {
+        return board.clone();
+    }
+
+    let mut new_white = board.white ^ flip;
+    let mut new_black = board.black ^ flip;
+
+    if board.turn {new_black |= ply} else {new_white |= ply};
+
+    Board {
+        white: new_white,
+        black: new_black,
+        turn: !board.turn
+    }
+}
+
 
 fn main(){
     let startpos = Board {
@@ -90,6 +187,16 @@ fn main(){
         turn: true
     };
 
-    let moves = possible_moves(&startpos);
-    printu64(moves);
+    let plys = possible_plys(&startpos);
+    let ply = 1 << 26;
+
+    println!("{}", startpos);
+
+    printu64(plys);
+    println!("");
+    printu64(ply);
+    println!("");
+    let new_board = play(&startpos, ply);
+
+    println!("{}", new_board);
 }
