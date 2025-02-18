@@ -13,13 +13,36 @@ pub struct Board {
 
     pub white: u64,
     pub black: u64,
-    pub turn: bool,
+    pub turn: Player,
 }
 
+#[derive(PartialEq, Clone, Copy)]
+pub enum Player {
+    Black,
+    White,
+}
+
+pub struct Ply {
+    pub ply: u64
+}
+
+pub struct Plys {
+    pub plys: u64
+}
+
+impl Board {
+    pub fn new() -> Self {
+        Board {
+            white: 0x0000001008000000,
+            black: 0x0000000810000000,
+            turn: Player::Black
+        }
+    }
+}
 use std::fmt;
 impl fmt::Display for Board {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        writeln!(f, "Turn: {}", if self.turn { "Black" } else { "White" })?;
+        writeln!(f, "Turn: {}", if self.turn == Player::Black { "Black" } else { "White" })?;
         for row in 0..8 {
             for col in 0..8 {
                 let index = row * 8 + col;
@@ -39,19 +62,81 @@ impl fmt::Display for Board {
     }
 }
 
-pub fn printu64(number: u64) {
-    for i in 0..8 {
-        for j in 0..8 {
-            let a = (number >> (i * 8 + j)) % 2;
-            print!("{a}");
+impl fmt::Display for Ply {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        for i in 0..8 {
+            for j in 0..8 {
+                let a = (self.ply >> (i * 8 + j)) % 2;
+                write!(f, "{} ", a)?;
+            }
+            writeln!(f) ?;
         }
-        println!("")
+        Ok(())
     }
 }
 
-pub fn possible_plys(board: &Board) -> u64 {
-    let player = if board.turn { board.black } else { board.white};
-    let opponent = if board.turn { board.white } else { board.black };
+impl fmt::Display for Plys {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        for i in 0..8 {
+            for j in 0..8 {
+                let a = (self.plys >> (i * 8 + j)) % 2;
+                write!(f, "{} ", a)?;
+            }
+            writeln!(f) ?;
+        }
+        Ok(())
+    }
+}
+
+
+impl std::ops::Not for Player {
+    type Output = Self;
+
+    fn not(self) -> Self::Output {
+        match self {
+            Player::Black => Player::White,
+            Player::White => Player::Black,
+        }
+    }
+}
+
+/// Implement `From<u64>` for `Plys` (no restrictions)
+impl From<u64> for Plys {
+    fn from(value: u64) -> Self {
+        Plys{ plys: value }
+    }
+}
+
+/// Implement `TryFrom<u64>` for `Ply`, allowing only values with exactly one bit set
+impl TryFrom<u64> for Ply {
+    type Error = &'static str;
+
+    fn try_from(value: u64) -> Result<Self, Self::Error> {
+        if value != 0 && value.count_ones() == 1 {
+            Ok(Ply{ ply: value })
+        } else {
+            Err("Ply must have exactly one bit set")
+        }
+    }
+}
+
+/// Implement `Into<u64>` for Ply and Plys
+impl From<Ply> for u64 {
+    fn from(ply: Ply) -> u64 {
+        ply.ply
+    }
+}
+
+impl From<Plys> for u64 {
+    fn from(plys: Plys) -> u64 {
+        plys.plys
+    }
+}
+
+
+pub fn possible_plys(board: &Board) -> Plys {
+    let player = if board.turn == Player::Black { board.black } else { board.white};
+    let opponent = if board.turn == Player::Black { board.white } else { board.black };
     let total = player | opponent;
 
     let t: u64 = 0xFFFFFFFFFFFFFF00;
@@ -59,7 +144,7 @@ pub fn possible_plys(board: &Board) -> u64 {
     let l: u64 = 0xFEFEFEFEFEFEFEFE;
     let b: u64 = 0x00FFFFFFFFFFFFFF;
 
-    let mut mask: u64 = 0;
+    let mut mask: u64;
 
     // north
     mask = (player >> 8) & opponent & t;
@@ -101,10 +186,14 @@ pub fn possible_plys(board: &Board) -> u64 {
     for _ in 0..5 { mask |= (mask << 7) & opponent & l & b; };
     let sw = (mask << 7) & !total;
 
-    return n | s | e | w | ne | nw | se | sw;
+    let plys = n | s | e | w | ne | nw | se | sw;
+
+    Plys {
+        plys
+    }
 }
 
-pub fn play(board: &Board, ply: u64) -> Board {
+pub fn play(board: &Board, ply: Ply) -> Board {
 
     // Playes the ply on the board.
     //
@@ -116,12 +205,13 @@ pub fn play(board: &Board, ply: u64) -> Board {
     //
     // Returns:
     // - The new board state
-    let player = if board.turn { board.black } else { board.white};
-    let opponent = if board.turn { board.white } else { board.black };
+    let player = if board.turn == Player::Black { board.black } else { board.white};
+    let opponent = if board.turn == Player::Black { board.white } else { board.black };
 
     let total = player | opponent;
 
-    if (total & ply) != 0 {
+    let uply: u64 = ply.into();
+    if (total & uply) != 0 {
         return board.clone();
     }
 
@@ -130,14 +220,14 @@ pub fn play(board: &Board, ply: u64) -> Board {
     let r: u64 = 0x7F7F7F7F7F7F7F7F;
     let l: u64 = 0xFEFEFEFEFEFEFEFE;
 
-    let mut n = ply >> 8 & opponent & t; let mut nr = player << 8 & opponent & b;
-    let mut ne = ply >> 7 & opponent & r & t; let mut ner = player << 7 & opponent & l & b;
-    let mut e = ply << 1 & opponent & r; let mut er = player >> 1 & opponent & l;
-    let mut se = ply << 9 & opponent & r & b; let mut ser = player >> 9 & opponent & l & t;
-    let mut s = ply << 8 & opponent & b; let mut sr = player >> 8 & opponent & t;
-    let mut sw = ply << 7 & opponent & l & b; let mut swr = player >> 7 & opponent & r & t;
-    let mut w = ply >> 1 & opponent & l; let mut wr = player << 1 & opponent & r;
-    let mut nw = ply >> 9 & opponent & l & t; let mut nwr = player << 9 & opponent & r & b;
+    let mut n = uply >> 8 & opponent & t; let mut nr = player << 8 & opponent & b;
+    let mut ne = uply >> 7 & opponent & r & t; let mut ner = player << 7 & opponent & l & b;
+    let mut e = uply << 1 & opponent & r; let mut er = player >> 1 & opponent & l;
+    let mut se = uply << 9 & opponent & r & b; let mut ser = player >> 9 & opponent & l & t;
+    let mut s = uply << 8 & opponent & b; let mut sr = player >> 8 & opponent & t;
+    let mut sw = uply << 7 & opponent & l & b; let mut swr = player >> 7 & opponent & r & t;
+    let mut w = uply >> 1 & opponent & l; let mut wr = player << 1 & opponent & r;
+    let mut nw = uply >> 9 & opponent & l & t; let mut nwr = player << 9 & opponent & r & b;
 
     for _ in 0..6 {
         n |= n >> 8 & opponent & t; nr |= nr << 8 & opponent & b;
@@ -168,7 +258,7 @@ pub fn play(board: &Board, ply: u64) -> Board {
     let mut new_white = board.white ^ flip;
     let mut new_black = board.black ^ flip;
 
-    if board.turn {new_black |= ply} else {new_white |= ply};
+    if board.turn == Player::Black {new_black |= uply} else {new_white |= uply};
 
     Board {
         white: new_white,

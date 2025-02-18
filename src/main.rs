@@ -3,21 +3,17 @@
 mod board;
 
 fn main(){
-    use board::{Board, possible_plys, play, printu64};
-    let startpos = Board {
-        white: 0x0000001008000000,
-        black: 0x0000000810000000,
-        turn: true
-    };
+    use board::{Board, possible_plys, play, Ply};
+    let startpos = Board::new();
 
     let plys = possible_plys(&startpos);
-    let ply = 1 << 26;
+    let ply = Ply{ ply: 1 << 26 };
 
     println!("{}", startpos);
 
-    printu64(plys);
+    println!("{}", plys);
     println!("");
-    printu64(ply);
+    println!("{}", ply);
     println!("");
     let new_board = play(&startpos, ply);
 
