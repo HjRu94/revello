@@ -7,7 +7,7 @@ fn main(){
     let startpos = Board::new();
 
     let plys = possible_plys(&startpos);
-    let ply = Ply{ ply: 1 << 26 };
+    let ply = Ply::new(1 << 26).expect("Invalid ply");
 
     println!("{}", startpos);
 

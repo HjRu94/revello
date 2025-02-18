@@ -1,16 +1,21 @@
+// This file contains the board representation and the game logic
+//
+// The Board is represented by two bitboards, one for each player.
+// The Ply represents a move on the board, and Plys represents a set of possible moves.
+//
+// The board is represented as follows:
+// 00 01 02 03 04 05 06 07
+// 08 09 10 11 12 13 14 15
+// 16 17 18 19 20 21 22 23
+// 24 25 26 27 28 29 30 31
+// 32 33 34 35 36 37 38 39
+// 40 41 42 43 44 45 46 47
+// 48 49 50 51 52 53 54 55
+// 56 57 58 59 60 61 62 63
+
+
 #[derive(Clone)]
 pub struct Board {
-    // 00 01 02 03 04 05 06 07
-    // 08 09 10 11 12 13 14 15
-    // 16 17 18 19 20 21 22 23
-    // 24 25 26 27 28 29 30 31
-    // 32 33 34 35 36 37 38 39
-    // 40 41 42 43 44 45 46 47
-    // 48 49 50 51 52 53 54 55
-    // 56 57 58 59 60 61 62 63
-
-    // if turn is true, it is black's turn
-
     pub white: u64,
     pub black: u64,
     pub turn: Player,
@@ -22,13 +27,9 @@ pub enum Player {
     White,
 }
 
-pub struct Ply {
-    pub ply: u64
-}
+pub struct Ply(u64);
 
-pub struct Plys {
-    pub plys: u64
-}
+pub struct Plys(u64);
 
 impl Board {
     pub fn new() -> Self {
@@ -39,6 +40,7 @@ impl Board {
         }
     }
 }
+
 use std::fmt;
 impl fmt::Display for Board {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -66,7 +68,7 @@ impl fmt::Display for Ply {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for i in 0..8 {
             for j in 0..8 {
-                let a = (self.ply >> (i * 8 + j)) % 2;
+                let a = (self.0 >> (i * 8 + j)) % 2;
                 write!(f, "{} ", a)?;
             }
             writeln!(f) ?;
@@ -79,7 +81,7 @@ impl fmt::Display for Plys {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for i in 0..8 {
             for j in 0..8 {
-                let a = (self.plys >> (i * 8 + j)) % 2;
+                let a = (self.0 >> (i * 8 + j)) % 2;
                 write!(f, "{} ", a)?;
             }
             writeln!(f) ?;
@@ -100,36 +102,35 @@ impl std::ops::Not for Player {
     }
 }
 
-/// Implement `From<u64>` for `Plys` (no restrictions)
-impl From<u64> for Plys {
-    fn from(value: u64) -> Self {
-        Plys{ plys: value }
-    }
-}
 
-/// Implement `TryFrom<u64>` for `Ply`, allowing only values with exactly one bit set
-impl TryFrom<u64> for Ply {
-    type Error = &'static str;
-
-    fn try_from(value: u64) -> Result<Self, Self::Error> {
-        if value != 0 && value.count_ones() == 1 {
-            Ok(Ply{ ply: value })
+/// Implement new for Ply and Plys
+impl Ply {
+    pub fn new(ply: u64) -> Option<Self> {
+        if ply != 0 && (ply & (ply - 1)) == 0 {
+            Some(Self(ply))
         } else {
-            Err("Ply must have exactly one bit set")
+            None
         }
     }
 }
 
+impl Plys {
+    pub fn new(plys: u64) -> Self {
+        Self(plys)
+    }
+}
+
+
 /// Implement `Into<u64>` for Ply and Plys
 impl From<Ply> for u64 {
     fn from(ply: Ply) -> u64 {
-        ply.ply
+        ply.0
     }
 }
 
 impl From<Plys> for u64 {
     fn from(plys: Plys) -> u64 {
-        plys.plys
+        plys.0
     }
 }
 
@@ -188,9 +189,7 @@ pub fn possible_plys(board: &Board) -> Plys {
 
     let plys = n | s | e | w | ne | nw | se | sw;
 
-    Plys {
-        plys
-    }
+    Plys::new(plys)
 }
 
 pub fn play(board: &Board, ply: Ply) -> Board {
@@ -211,6 +210,7 @@ pub fn play(board: &Board, ply: Ply) -> Board {
     let total = player | opponent;
 
     let uply: u64 = ply.into();
+
     if (total & uply) != 0 {
         return board.clone();
     }
