@@ -27,19 +27,26 @@ pub enum Player {
     White,
 }
 
+#[derive(Clone)]
 pub struct Ply(u64);
 
 pub struct Plys(u64);
 
 impl Board {
-    pub fn new() -> Self {
+    pub fn new(black: u64, white: u64, turn: Player) -> Self {
         Board {
-            white: 0x0000001008000000,
-            black: 0x0000000810000000,
-            turn: Player::Black
+            white: white,
+            black: black,
+            turn: turn
         }
     }
 }
+
+pub const START_BOARD: Board = Board {
+    white: 0x0000001008000000,
+    black: 0x0000000810000000,
+    turn: Player::Black,
+};
 
 use std::fmt;
 impl fmt::Display for Board {
@@ -103,14 +110,17 @@ impl std::ops::Not for Player {
 }
 
 
-/// Implement new for Ply and Plys
+// Implement new for Ply and Plys
 impl Ply {
     pub fn new(ply: u64) -> Option<Self> {
-        if ply != 0 && (ply & (ply - 1)) == 0 {
+        if (ply & (ply - 1)) == 0 {
             Some(Self(ply))
         } else {
             None
         }
+    }
+    pub const unsafe fn new_unchecked(ply: u64) -> Self {
+        Self(ply)
     }
 }
 
@@ -118,10 +128,26 @@ impl Plys {
     pub fn new(plys: u64) -> Self {
         Self(plys)
     }
+
+    pub fn to_vec_ply(self) -> Vec<Ply>{
+        let mut ret = Vec::new();
+        let mut bit = 0;
+
+        let mut n: u64 = self.into();
+
+        while n > 0 {
+            if n & 1 == 1 {
+                ret.push(Ply::new(1u64 << bit).expect("this shouldn't happen"));
+            }
+            n >>= 1;
+            bit += 1;
+        }
+        ret
+    }
 }
 
 
-/// Implement `Into<u64>` for Ply and Plys
+// Implement `Into<u64>` for Ply and Plys
 impl From<Ply> for u64 {
     fn from(ply: Ply) -> u64 {
         ply.0
@@ -260,9 +286,5 @@ pub fn play(board: &Board, ply: Ply) -> Board {
 
     if board.turn == Player::Black {new_black |= uply} else {new_white |= uply};
 
-    Board {
-        white: new_white,
-        black: new_black,
-        turn: !board.turn
-    }
+    Board::new(new_black, new_white, !board.turn)
 }
