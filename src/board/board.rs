@@ -26,6 +26,11 @@ pub enum Player {
     Black,
     White,
 }
+#[derive(PartialEq, Clone, Copy)]
+pub enum Piece {
+    Black,
+    White
+}
 
 #[derive(Clone)]
 pub struct Ply(u64);
@@ -33,12 +38,26 @@ pub struct Ply(u64);
 pub struct Plys(u64);
 
 impl Board {
-    pub fn new(black: u64, white: u64, turn: Player) -> Self {
-        Board {
-            white: white,
-            black: black,
-            turn: turn
+    pub fn new(black: u64, white: u64, turn: Player) -> Option<Self> {
+        if black & white == 0 {
+            return Some(Board {
+                white: white,
+                black: black,
+                turn: turn
+            })
         }
+        None
+    }
+
+    pub fn get(&self, row: usize, col: usize) -> Option<Piece> {
+        let index: usize = row * 8 + col;
+        if ((1 << index) & self.white) != 0{
+            return Some(Piece::White)
+        }
+        if ((1 << index) & self.black) != 0 {
+            return Some(Piece::Black)
+        }
+        return None
     }
 }
 
@@ -286,5 +305,5 @@ pub fn play(board: &Board, ply: Ply) -> Board {
 
     if board.turn == Player::Black {new_black |= uply} else {new_white |= uply};
 
-    Board::new(new_black, new_white, !board.turn)
+    Board::new(new_black, new_white, !board.turn).expect("the black and white pieces are overlapping")
 }

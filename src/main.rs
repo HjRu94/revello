@@ -2,6 +2,9 @@
 
 mod board;
 mod ai;
+mod graphics;
+mod entrypoints;
+
 use clap::{Parser, Subcommand, Args, ValueEnum};
 
 #[derive(Parser)]
@@ -51,8 +54,10 @@ enum AiType {
     Random,
 }
 
-fn main() {
+#[macroquad::main("my game")]
+async fn main() {
     let cli = Cli::parse();
+    use crate::entrypoints::play::{human_vs_ai};
 
     match cli.command {
         Commands::Play(play_mode) => match play_mode {
@@ -67,6 +72,7 @@ fn main() {
             PlayMode::HumanVsAi(opts) => {
                 //TODO Implement Human vs AI
                 println!("Human vs AI with {:?} AI", opts.ai);
+                human_vs_ai().await;
             }
         },
         Commands::Analyse { file } => {
