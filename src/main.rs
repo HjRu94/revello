@@ -57,17 +57,19 @@ enum AiType {
 #[macroquad::main("my game")]
 async fn main() {
     let cli = Cli::parse();
-    use crate::entrypoints::play::{human_vs_ai};
+    use crate::entrypoints::play::{human_vs_ai, human_vs_human, ai_vs_ai};
 
     match cli.command {
         Commands::Play(play_mode) => match play_mode {
             PlayMode::AiVsAi(opts) => {
                 //TODO Implement Ai vs Ai
                 println!("AI vs AI with {:?} AI", opts.ai);
+                ai_vs_ai().await;
             }
             PlayMode::HumanVsHuman => {
                 //TODO Implement human vs human
                 println!("Human vs Human");
+                human_vs_human().await;
             }
             PlayMode::HumanVsAi(opts) => {
                 //TODO Implement Human vs AI

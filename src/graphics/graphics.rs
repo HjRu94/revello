@@ -1,5 +1,5 @@
 use macroquad::prelude::*;
-use crate::board::board::{Board, Piece};
+use crate::board::board::{Board, Piece, Ply};
 
 const SQUARE_SIZE:   f32 = 100.0;
 const MARGIN:        f32 = 100.0;
@@ -11,6 +11,34 @@ const WHITE_COLOR: Color = LIGHTGRAY;
 const BACKGROUND_COLOR: Color = WHITE;
 const BOARD_COLOR: Color = GREEN;
 const GRID_COLOR: Color = BLACK;
+
+pub fn detect_ply() -> Option<Ply> {
+    if !is_mouse_button_pressed(MouseButton::Left) {
+        return None;
+    }
+    let mut row: Option<usize> = None;
+    let mut col: Option<usize> = None;
+    let (mut mouse_x, mut mouse_y) = mouse_position();
+    for i in 0..8 {
+        for j in 0..8 {
+            if MARGIN + i as f32 * SQUARE_SIZE <= mouse_x && mouse_x <= MARGIN + (i as f32 + 1.0) * SQUARE_SIZE {
+                if MARGIN + j as f32 * SQUARE_SIZE <= mouse_y && mouse_y <= MARGIN + (j as f32 + 1.0) * SQUARE_SIZE {
+                    row = Some(j);
+                    col = Some(i);
+                }
+            }
+        }
+    }
+    if row == None || col == None {
+        return None;
+    }
+    let row = row.expect("row is None");
+    let col = col.expect("col is None");
+
+    let ply: Ply = Ply::from_row_col(row, col).expect("Ply returned None");
+
+    return Some(ply);
+}
 
 pub async fn draw_board(board: &Board) {
     clear_background(BACKGROUND_COLOR);

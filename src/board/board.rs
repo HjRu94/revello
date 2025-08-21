@@ -16,8 +16,8 @@
 
 #[derive(Clone)]
 pub struct Board {
-    pub white: u64,
     pub black: u64,
+    pub white: u64,
     pub turn: Player,
 }
 
@@ -32,7 +32,7 @@ pub enum Piece {
     White
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub struct Ply(u64);
 
 pub struct Plys(u64);
@@ -62,8 +62,8 @@ impl Board {
 }
 
 pub const START_BOARD: Board = Board {
-    white: 0x0000001008000000,
     black: 0x0000000810000000,
+    white: 0x0000001008000000,
     turn: Player::Black,
 };
 
@@ -137,6 +137,13 @@ impl Ply {
         } else {
             None
         }
+    }
+    pub fn from_row_col(row: usize, col:usize) -> Option<Self> {
+        if 0 <= row && row < 8 && 0 <= col && col < 8 {
+            let index: u64 = row as u64 * 8 + col as u64;
+            return Self::new(1 << index);
+        }
+        None
     }
     pub const unsafe fn new_unchecked(ply: u64) -> Self {
         Self(ply)

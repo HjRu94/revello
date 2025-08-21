@@ -1,12 +1,21 @@
-use crate::graphics::graphics::{draw_board};
-use crate::board::board::{Board, START_BOARD,Player};
-pub async fn human_vs_ai() {
-    let mut board = Board::new(
-        0x0000001008000000,
-        0x0000000810000000,
-        Player::Black).expect("white and black are overlapping");
+use crate::graphics::graphics::{draw_board, detect_ply};
+use crate::board::board::{Board, START_BOARD, Player, play};
 
+pub async fn ai_vs_ai() {
+
+}
+
+pub async fn human_vs_ai() {
+
+}
+
+pub async fn human_vs_human() {
+    let mut board = START_BOARD.clone();
     loop {
+        let ply = detect_ply();
+        if ply != None {
+            board = play(&board, ply.expect("ply is None"));
+        }
         draw_board(&board).await;
     }
 }
