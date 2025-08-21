@@ -145,8 +145,16 @@ impl Ply {
         }
         None
     }
+
     pub const unsafe fn new_unchecked(ply: u64) -> Self {
         Self(ply)
+    }
+
+    pub fn to_row_col(&self) -> (usize, usize) {
+        let idx = self.0.trailing_zeros() as usize;
+        let row = idx / 8;
+        let col = idx % 8;
+        (row, col)
     }
 }
 
@@ -172,6 +180,30 @@ impl Plys {
     }
 }
 
+impl IntoIterator for Plys {
+    type Item = Ply;
+    type IntoIter = PlysIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        PlysIter(self.0)
+    }
+}
+
+pub struct PlysIter(u64);
+
+impl Iterator for PlysIter {
+    type Item = Ply;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.0 == 0 {
+            return None;
+        }
+        // Extract lowest set bit
+        let lsb = self.0 & (!self.0 + 1);
+        self.0 &= !lsb;
+        Some(Ply::new(lsb).expect("new is returning None"))
+    }
+}
 
 // Implement `Into<u64>` for Ply and Plys
 impl From<Ply> for u64 {

@@ -1,5 +1,6 @@
-use crate::graphics::graphics::{draw_board, detect_ply};
+use crate::graphics::graphics::{draw_board, draw_playable, detect_ply};
 use crate::board::board::{Board, START_BOARD, Player, play};
+use macroquad::prelude::{next_frame};
 
 pub async fn ai_vs_ai() {
 
@@ -17,5 +18,8 @@ pub async fn human_vs_human() {
             board = play(&board, ply.expect("ply is None"));
         }
         draw_board(&board).await;
+        draw_playable(&board);
+
+        next_frame().await;
     }
 }

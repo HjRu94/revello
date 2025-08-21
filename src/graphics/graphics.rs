@@ -1,13 +1,15 @@
 use macroquad::prelude::*;
-use crate::board::board::{Board, Piece, Ply};
+use crate::board::board::{Board, Piece, Ply, possible_plys};
 
 const SQUARE_SIZE:   f32 = 100.0;
 const MARGIN:        f32 = 100.0;
 const CIRCLE_RADIUS: f32 = 40.0;
+const PLAYABLE_CIRCLE_RADIUS: f32 = 15.0;
 const LINE_THICKNESS: f32 = 2.0;
 
 const BLACK_COLOR: Color = DARKGRAY;
 const WHITE_COLOR: Color = LIGHTGRAY;
+const PLAYABLE_COLOR: Color = DARKGRAY;
 const BACKGROUND_COLOR: Color = WHITE;
 const BOARD_COLOR: Color = GREEN;
 const GRID_COLOR: Color = BLACK;
@@ -40,13 +42,27 @@ pub fn detect_ply() -> Option<Ply> {
     return Some(ply);
 }
 
+pub fn draw_playable(board: &Board) {
+    let plys = possible_plys(board);
+    for ply in plys {
+        draw_ply(ply);
+    }
+}
+
+fn draw_ply(ply: Ply) {
+    let (row, col) = ply.to_row_col();
+    draw_circle(MARGIN + (col as f32 + 0.5) * SQUARE_SIZE, MARGIN + (row as f32 + 0.5) * SQUARE_SIZE, PLAYABLE_CIRCLE_RADIUS, PLAYABLE_COLOR);
+}
+
+pub fn draw_turn(board: &Board) {
+
+}
+
 pub async fn draw_board(board: &Board) {
     clear_background(BACKGROUND_COLOR);
 
     draw_grid();
     draw_pieces(board);
-
-    next_frame().await;
 }
 
 fn draw_grid() {
