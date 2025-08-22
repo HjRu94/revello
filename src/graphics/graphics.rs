@@ -7,10 +7,10 @@ const CIRCLE_RADIUS: f32 = 40.0;
 const PLAYABLE_CIRCLE_RADIUS: f32 = 15.0;
 const LINE_THICKNESS: f32 = 2.0;
 
-const BLACK_COLOR: Color = DARKGRAY;
-const WHITE_COLOR: Color = LIGHTGRAY;
+const BLACK_COLOR: Color = Color::new(0.25, 0.25, 0.25, 1.0);
+const WHITE_COLOR: Color = Color::new(0.92, 0.92, 0.88, 1.0);
 const BACKGROUND_COLOR: Color = WHITE;
-const BOARD_COLOR: Color = GREEN;
+const BOARD_COLOR: Color = Color::new(0.35, 0.75, 0.35, 1.0);
 const GRID_COLOR: Color = BLACK;
 
 pub fn detect_ply() -> Option<Ply> {
