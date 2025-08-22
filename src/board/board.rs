@@ -59,6 +59,9 @@ impl Board {
         }
         return None
     }
+    pub fn get_turn(&self) -> Player {
+        return self.turn;
+    }
 }
 
 pub const START_BOARD: Board = Board {

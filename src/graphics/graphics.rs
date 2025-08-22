@@ -1,5 +1,5 @@
 use macroquad::prelude::*;
-use crate::board::board::{Board, Piece, Ply, possible_plys};
+use crate::board::board::{Board, Piece, Ply, possible_plys, Player};
 
 const SQUARE_SIZE:   f32 = 100.0;
 const MARGIN:        f32 = 100.0;
@@ -9,7 +9,6 @@ const LINE_THICKNESS: f32 = 2.0;
 
 const BLACK_COLOR: Color = DARKGRAY;
 const WHITE_COLOR: Color = LIGHTGRAY;
-const PLAYABLE_COLOR: Color = DARKGRAY;
 const BACKGROUND_COLOR: Color = WHITE;
 const BOARD_COLOR: Color = GREEN;
 const GRID_COLOR: Color = BLACK;
@@ -44,18 +43,18 @@ pub fn detect_ply() -> Option<Ply> {
 
 pub fn draw_playable(board: &Board) {
     let plys = possible_plys(board);
+    let color = match board.get_turn() {
+        Player::Black => BLACK_COLOR,
+        Player::White => WHITE_COLOR,
+    };
     for ply in plys {
-        draw_ply(ply);
+        draw_ply(ply, color);
     }
 }
 
-fn draw_ply(ply: Ply) {
+fn draw_ply(ply: Ply, color: Color) {
     let (row, col) = ply.to_row_col();
-    draw_circle(MARGIN + (col as f32 + 0.5) * SQUARE_SIZE, MARGIN + (row as f32 + 0.5) * SQUARE_SIZE, PLAYABLE_CIRCLE_RADIUS, PLAYABLE_COLOR);
-}
-
-pub fn draw_turn(board: &Board) {
-
+    draw_circle(MARGIN + (col as f32 + 0.5) * SQUARE_SIZE, MARGIN + (row as f32 + 0.5) * SQUARE_SIZE, PLAYABLE_CIRCLE_RADIUS, color);
 }
 
 pub async fn draw_board(board: &Board) {
