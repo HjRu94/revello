@@ -44,8 +44,9 @@ pub fn detect_ply() -> Option<Ply> {
 pub fn draw_playable(board: &Board) {
     let plys = possible_plys(board);
     let color = match board.get_turn() {
-        Player::Black => BLACK_COLOR,
-        Player::White => WHITE_COLOR,
+        Some(Player::Black) => BLACK_COLOR,
+        Some(Player::White) => WHITE_COLOR,
+        None => BLACK, // this should not matter
     };
     for ply in plys {
         draw_ply(ply, color);

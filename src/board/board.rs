@@ -18,7 +18,7 @@
 pub struct Board {
     pub black: u64,
     pub white: u64,
-    pub turn: Player,
+    pub turn: Option<Player>,
 }
 
 #[derive(PartialEq, Clone, Copy)]
@@ -35,10 +35,11 @@ pub enum Piece {
 #[derive(Clone, PartialEq)]
 pub struct Ply(u64);
 
+#[derive(PartialEq)]
 pub struct Plys(u64);
 
 impl Board {
-    pub fn new(black: u64, white: u64, turn: Player) -> Option<Self> {
+    pub fn new(black: u64, white: u64, turn: Option<Player>) -> Option<Self> {
         if black & white == 0 {
             return Some(Board {
                 white: white,
@@ -59,7 +60,17 @@ impl Board {
         }
         return None
     }
-    pub fn get_turn(&self) -> Player {
+    pub fn flip_turn(&mut self) {
+        if self.turn == None {
+            return ;
+        }
+        self.turn = Some(!self.turn.expect("turn is None"));
+    }
+    
+    pub fn set_turn(&mut self, turn: Option<Player>) {
+        self.turn = turn;
+    }
+    pub fn get_turn(&self) -> Option<Player> {
         return self.turn;
     }
 }
@@ -67,13 +78,13 @@ impl Board {
 pub const START_BOARD: Board = Board {
     black: 0x0000000810000000,
     white: 0x0000001008000000,
-    turn: Player::Black,
+    turn: Some(Player::Black),
 };
 
 use std::fmt;
 impl fmt::Display for Board {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        writeln!(f, "Turn: {}", if self.turn == Player::Black { "Black" } else { "White" })?;
+        writeln!(f, "Turn: {}", if self.turn == Some(Player::Black) { "Black" } else if self.turn == Some(Player::White) { "White"} else { "None" })?;
         for row in 0..8 {
             for col in 0..8 {
                 let index = row * 8 + col;
@@ -223,8 +234,11 @@ impl From<Plys> for u64 {
 
 
 pub fn possible_plys(board: &Board) -> Plys {
-    let player = if board.turn == Player::Black { board.black } else { board.white};
-    let opponent = if board.turn == Player::Black { board.white } else { board.black };
+    if board.turn == None {
+        return Plys::new(0);
+    }
+    let player = if board.turn.expect("turn is None") == Player::Black { board.black } else { board.white};
+    let opponent = if board.turn.expect("turn is None") == Player::Black { board.white } else { board.black };
     let total = player | opponent;
 
     let t: u64 = 0xFFFFFFFFFFFFFF00;
@@ -232,49 +246,40 @@ pub fn possible_plys(board: &Board) -> Plys {
     let l: u64 = 0xFEFEFEFEFEFEFEFE;
     let b: u64 = 0x00FFFFFFFFFFFFFF;
 
-    let mut mask: u64;
+    let tr: u64 = t & r;
+    let tl: u64 = t & l;
+    let br: u64 = b & r;
+    let bl: u64 = b & l;
 
-    // north
-    mask = (player >> 8) & opponent & t;
-    for _ in 0..5 { mask |= (mask >> 8) & opponent & t; };
-    let n = (mask >> 8) & !total;
+    let mut n = (player & t) >> 8 & opponent & t;
+    let mut s = (player & b) << 8 & opponent & b;
+    let mut e = (player & r) << 1 & opponent & r;
+    let mut w = (player & l) >> 1 & opponent & l;
+    let mut ne = (player & tr) >> 7 & opponent & tr;
+    let mut se = (player & br) << 9 & opponent & br;
+    let mut sw = (player & bl) << 7 & opponent & bl;
+    let mut nw = (player & tl) >> 9 & opponent & tl;
 
-    // south
-    mask = (player << 8) & opponent & b;
-    for _ in 0..5 { mask |= (mask << 8) & opponent & b; };
-    let s = (mask << 8) & !total;
+    for _ in 0..5 {
+        n |= n >> 8 & opponent & t;
+        s |= s << 8 & opponent & b;
+        e |= e << 1 & opponent & r;
+        w |= w >> 1 & opponent & l;
+        ne |= ne >> 7 & opponent & tr;
+        se |= se << 9 & opponent & br;
+        sw |= sw << 7 & opponent & bl;
+        nw |= nw >> 9 & opponent & tl;
+    }
+    n = n >> 8 & !total;
+    s = s << 8 & !total;
+    e = e << 1 & !total;
+    w = w >> 1 & !total;
+    ne = ne >> 7 & !total;
+    se = se << 9 & !total;
+    sw = sw << 7 & !total;
+    nw = nw >> 9 & !total;
 
-    // east
-    mask = (player << 1) & opponent & r;
-    for _ in 0..5 { mask |= (mask << 1) & opponent & r; };
-    let e = (mask << 1) & !total;
-
-    // west
-    mask = (player >> 1) & opponent & l;
-    for _ in 0..5 { mask |= (mask >> 1) & opponent & l; };
-    let w = (mask >> 1) & !total;
-
-    // north east
-    mask = (player >> 7) & opponent & r & t;
-    for _ in 0..5 { mask |= (mask >> 7) & opponent & r & t; };
-    let ne = (mask >> 7) & !total;
-
-    // north west
-    mask = (player >> 9) & opponent & l & t;
-    for _ in 0..5 { mask |= (mask >> 9) & opponent & l & t; };
-    let nw = (mask >> 9) & !total;
-
-    // south east
-    mask = (player << 9) & opponent & r & b;
-    for _ in 0..5 { mask |= (mask << 9) & opponent & r & b; };
-    let se = (mask << 9) & !total;
-
-    // south west
-    mask = (player << 7) & opponent & l & b;
-    for _ in 0..5 { mask |= (mask << 7) & opponent & l & b; };
-    let sw = (mask << 7) & !total;
-
-    let plys = n | s | e | w | ne | nw | se | sw;
+    let plys = n | s | e | w | ne | se | sw | nw;
 
     Plys::new(plys)
 }
@@ -291,61 +296,154 @@ pub fn play(board: &Board, ply: Ply) -> Board {
     //
     // Returns:
     // - The new board state
-    let player = if board.turn == Player::Black { board.black } else { board.white};
-    let opponent = if board.turn == Player::Black { board.white } else { board.black };
 
-    let total = player | opponent;
-
-    let uply: u64 = ply.into();
-
-    if (total & uply) != 0 {
+    if board.turn == None {
         return board.clone();
     }
+
+    if possible_plys(board) == Plys(0) {
+
+    }
+
+    let player = if board.turn.expect("Turn is None") == Player::Black { board.black } else { board.white};
+    let opponent = if board.turn.expect("Turn is None") == Player::Black { board.white } else { board.black };
 
     let t: u64 = 0xFFFFFFFFFFFFFF00;
     let b: u64 = 0x00FFFFFFFFFFFFFF;
     let r: u64 = 0x7F7F7F7F7F7F7F7F;
     let l: u64 = 0xFEFEFEFEFEFEFEFE;
 
-    let mut n = uply >> 8 & opponent & t; let mut nr = player << 8 & opponent & b;
-    let mut ne = uply >> 7 & opponent & r & t; let mut ner = player << 7 & opponent & l & b;
-    let mut e = uply << 1 & opponent & r; let mut er = player >> 1 & opponent & l;
-    let mut se = uply << 9 & opponent & r & b; let mut ser = player >> 9 & opponent & l & t;
-    let mut s = uply << 8 & opponent & b; let mut sr = player >> 8 & opponent & t;
-    let mut sw = uply << 7 & opponent & l & b; let mut swr = player >> 7 & opponent & r & t;
-    let mut w = uply >> 1 & opponent & l; let mut wr = player << 1 & opponent & r;
-    let mut nw = uply >> 9 & opponent & l & t; let mut nwr = player << 9 & opponent & r & b;
+    let tr: u64 = t & r;
+    let tl: u64 = t & l;
+    let br: u64 = b & r;
+    let bl: u64 = b & l;
 
-    for _ in 0..6 {
-        n |= n >> 8 & opponent & t; nr |= nr << 8 & opponent & b;
-        ne |= ne >> 7 & opponent & r & t; ner |= ner << 7 & opponent & l & b;
-        e |= e << 1 & opponent & r; er |= er >> 1 & opponent & l;
-        se |= se << 9 & opponent & r & b; ser |= ser >> 9 & opponent & l & t;
-        s |= s << 8 & opponent & b; sr |= sr >> 8 & opponent & t;
-        sw |= sw << 7 & opponent & l & b; swr |= swr >> 7 & opponent & r & t;
-        w |= w >> 1 & opponent & l; wr |= wr << 1 & opponent & r;
-        nw |= nw >> 9 & opponent & l & t; nwr |= nwr << 9 & opponent & r & b;
+    let uply: u64 = ply.into();
+
+    let mut n = (uply & t) >> 8 & opponent & t;
+    let mut nr = (player & b) << 8 & opponent & b;
+
+    let mut s = (uply & b) << 8 & opponent & b;
+    let mut sr = (player & t) >> 8 & opponent & t;
+
+    let mut e = (uply & r) << 1 & opponent & r;
+    let mut er = (player & l) >> 1 & opponent & l;
+
+    let mut w = (uply & l) >> 1 & opponent & l;
+    let mut wr = (player & r) << 1 & opponent & r;
+
+    let mut ne = (uply & tr) >> 7 & opponent & tr;
+    let mut ner = (player & bl) << 7 & opponent & bl;
+
+    let mut se = (uply & br) << 9 & opponent & br;
+    let mut ser = (player & tl) >> 9 & opponent & tl;
+
+    let mut sw = (uply & bl) << 7 & opponent & bl;
+    let mut swr = (player & tr) >> 7 & opponent & tr;
+
+    let mut nw = (uply & tl) >> 9 & opponent & tl;
+    let mut nwr = (player & br) << 9 & opponent & br;
+
+    for _ in 0..5 {
+        n |= n >> 8 & opponent & t;
+        nr |= nr << 8 & opponent & b;
+
+        s |= s << 8 & opponent & b;
+        sr |= sr >> 8 & opponent & t;
+
+        e |= e << 1 & opponent & r;
+        er |= er >> 1 & opponent & l;
+
+        w |= w >> 1 & opponent & l;
+        wr |= wr << 1 & opponent & r;
+
+        ne |= ne >> 7 & opponent & tr;
+        ner |= ner << 7 & opponent & bl;
+
+        se |= se << 9 & opponent & br;
+        ser |= ser >> 9 & opponent & tl;
+
+        sw |= sw << 7 & opponent & bl;
+        swr |= swr >> 7 & opponent & tr;
+
+        nw |= nw >> 9 & opponent & tl;
+        nwr |= nwr << 9 & opponent & br;
     }
 
-    n = n & nr;
-    ne = ne & ner;
-    e = e & er;
-    se = se & ser;
-    s = s & sr;
-    sw = sw & swr;
-    w = w & wr;
-    nw = nw & nwr;
+    n &= nr;
+    s &= sr;
+    e &= er;
+    w &= wr;
+    ne &= ner;
+    se &= ser;
+    sw &= swr;
+    nw &= nwr;
 
-    let flip = n | ne | e | se | s | sw | w | nw;
+    let flip = n | s | e | w | ne | se | sw | nw ;
 
     if flip == 0 {
+        println!("ply was not good");
         return board.clone();
     }
 
     let mut new_white = board.white ^ flip;
     let mut new_black = board.black ^ flip;
 
-    if board.turn == Player::Black {new_black |= uply} else {new_white |= uply};
+    if board.turn.expect("turn is None") == Player::Black {new_black |= uply} else {new_white |= uply};
 
-    Board::new(new_black, new_white, !board.turn).expect("the black and white pieces are overlapping")
+    let mut ret_board = Board::new(new_black, new_white, board.turn).expect("the black and white pieces are overlapping");
+    ret_board.flip_turn();
+
+    if possible_plys(&ret_board) == Plys::new(0) {
+
+        println!("{}", board);
+
+        ret_board.flip_turn();
+
+        if possible_plys(&ret_board) == Plys::new(0) {
+            ret_board.set_turn(None);
+            return ret_board;
+        }
+        else {
+            return ret_board;
+        }
+    }
+
+    else {
+        return ret_board;
+    }
+
+
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_move_gen() {
+        let board = START_BOARD;
+        assert_eq!(count_moves(&board, 1), 4);
+        assert_eq!(count_moves(&board, 2), 12);
+        assert_eq!(count_moves(&board, 3), 56);
+        assert_eq!(count_moves(&board, 4), 244);
+        assert_eq!(count_moves(&board, 5), 1396);
+        assert_eq!(count_moves(&board, 6), 8200);
+        assert_eq!(count_moves(&board, 7), 55092);
+        assert_eq!(count_moves(&board, 8), 390216);
+        assert_eq!(count_moves(&board, 9), 3005288);
+        assert_eq!(count_moves(&board, 10), 24571284);
+    }
+
+    fn count_moves(board: &Board, depth: i32) -> i32 {
+        if depth == 0 {
+            return 1;
+        }
+        let mut total = 0;
+        let plys = possible_plys(board);
+        for ply in plys{
+            total += count_moves(&play(board, ply), depth - 1);
+        }
+        return total;
+    }
 }

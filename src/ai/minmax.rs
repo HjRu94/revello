@@ -35,7 +35,7 @@ pub fn min_max(board: Board, depth: u32) -> MinMaxResponse {
     }
     let plys = possible_plys(&board);
     let vec_ply = plys.to_vec_ply();
-    if board.turn == Player::Black {
+    if board.turn == Some(Player::Black) {
         let mut val = minus_inf;
         for ply in vec_ply {
             let new_board = play(&board, ply.clone());
