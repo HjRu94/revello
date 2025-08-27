@@ -382,7 +382,6 @@ pub fn play(board: &Board, ply: Ply) -> Board {
     let flip = n | s | e | w | ne | se | sw | nw ;
 
     if flip == 0 {
-        println!("ply was not good");
         return board.clone();
     }
 
@@ -395,8 +394,6 @@ pub fn play(board: &Board, ply: Ply) -> Board {
     ret_board.flip_turn();
 
     if possible_plys(&ret_board) == Plys::new(0) {
-
-        println!("{}", board);
 
         ret_board.flip_turn();
 

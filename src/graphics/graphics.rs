@@ -58,7 +58,7 @@ fn draw_ply(ply: Ply, color: Color) {
     draw_circle(MARGIN + (col as f32 + 0.5) * SQUARE_SIZE, MARGIN + (row as f32 + 0.5) * SQUARE_SIZE, PLAYABLE_CIRCLE_RADIUS, color);
 }
 
-pub async fn draw_board(board: &Board) {
+pub fn draw_board(board: &Board) {
     clear_background(BACKGROUND_COLOR);
 
     draw_grid();
