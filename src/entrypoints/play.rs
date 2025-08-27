@@ -10,7 +10,66 @@ use std::sync::atomic::{Ordering, AtomicBool};
 use std::time::Duration;
 
 pub async fn ai_vs_ai() {
+    let mut board = START_BOARD.clone();
 
+    let ai_player1: MinMaxPlayer = MinMaxPlayer{};
+    let ai_player2: MinMaxPlayer = MinMaxPlayer{};
+
+    let ai_player1_move: Arc<Mutex<Option<Ply>>> = Arc::new(Mutex::new(None));
+    let ai_player2_move: Arc<Mutex<Option<Ply>>> = Arc::new(Mutex::new(None));
+
+    let ai_thinking = Arc::new(AtomicBool::new(false));
+
+    loop {
+        draw_board(&board);
+        let ply = detect_ply();
+
+        if board.turn == Some(Player::Black)
+            && ai_player1_move.lock().unwrap().is_none()
+            && !ai_thinking.load(Ordering::SeqCst)
+        {
+            let ai_player1_move_clone = ai_player1_move.clone();
+            let board_clone = board.clone();
+            let ai_player1_clone = ai_player1.clone();
+            let ai_thinking_clone = ai_thinking.clone();
+
+            ai_thinking.store(true, Ordering::SeqCst);
+
+            thread::spawn( move || {
+                let ply = ai_player1_clone.generate_ply(&board_clone, Duration::new(0, 0));
+                *ai_player1_move_clone.lock().unwrap() = Some(ply);
+                ai_thinking_clone.store(false, Ordering::SeqCst);
+                    });
+        }
+
+        if board.turn == Some(Player::White)
+            && ai_player2_move.lock().unwrap().is_none()
+            && !ai_thinking.load(Ordering::SeqCst)
+        {
+            let ai_player2_move_clone = ai_player2_move.clone();
+            let board_clone = board.clone();
+            let ai_player2_clone = ai_player2.clone();
+            let ai_thinking_clone = ai_thinking.clone();
+
+            ai_thinking.store(true, Ordering::SeqCst);
+
+            thread::spawn( move || {
+                let ply = ai_player2_clone.generate_ply(&board_clone, Duration::new(0, 0));
+                *ai_player2_move_clone.lock().unwrap() = Some(ply);
+                ai_thinking_clone.store(false, Ordering::SeqCst);
+                    });
+        }
+
+        if let Some(ply) = ai_player1_move.lock().unwrap().take() {
+            board = play(&board, ply);
+        }
+
+        if let Some(ply) = ai_player2_move.lock().unwrap().take() {
+            board = play(&board, ply);
+        }
+
+        next_frame().await;
+    }
 }
 
 pub async fn human_vs_ai() {
