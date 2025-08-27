@@ -1,6 +1,6 @@
 use crate::graphics::graphics::{draw_board, detect_ply, draw_playable};
 use crate::board::board::{Board, START_BOARD, Player, play, Ply};
-use crate::ai::player::{HumanPlayer, MinMaxPlayer, Player as AiPlayer};
+use crate::ai::player::{MinMaxPlayer, Player as AiPlayer};
 use macroquad::prelude::next_frame;
 
 use std::thread;
@@ -22,7 +22,6 @@ pub async fn ai_vs_ai() {
 
     loop {
         draw_board(&board);
-        let ply = detect_ply();
 
         if board.turn == Some(Player::Black)
             && ai_player1_move.lock().unwrap().is_none()
@@ -82,7 +81,6 @@ pub async fn human_vs_ai() {
 
     loop {
         draw_board(&board);
-        let ply = detect_ply();
 
         if board.turn == Some(Player::Black)
             && ai_player_move.lock().unwrap().is_none()
@@ -103,11 +101,11 @@ pub async fn human_vs_ai() {
         }
         else if board.turn == Some(Player::White) {
             let ply = detect_ply();
+            draw_playable(&board);
 
             if ply != None {
                 board = play(&board, ply.expect("Ply is none"));
             }
-            draw_playable(&board);
         }
 
         if let Some(ply) = ai_player_move.lock().unwrap().take() {

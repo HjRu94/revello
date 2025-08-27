@@ -280,7 +280,6 @@ pub fn possible_plys(board: &Board) -> Plys {
     nw = nw >> 9 & !total;
 
     let plys = n | s | e | w | ne | se | sw | nw;
-
     Plys::new(plys)
 }
 
@@ -319,6 +318,11 @@ pub fn play(board: &Board, ply: Ply) -> Board {
     let bl: u64 = b & l;
 
     let uply: u64 = ply.into();
+
+
+    if uply & (player | opponent) != 0 {
+        return board.clone();
+    }
 
     let mut n = (uply & t) >> 8 & opponent & t;
     let mut nr = (player & b) << 8 & opponent & b;

@@ -17,7 +17,7 @@ impl Player for MinMaxPlayer {
 
         let mut alpha = MinMaxResponse::MIN;
         let mut beta = MinMaxResponse::MAX;
-        let response = min_max(board.clone(), 8, &mut alpha, &mut beta);
+        let response = min_max(board.clone(), 9, &mut alpha, &mut beta);
         let ply = response.ply.expect("invalid move");
 
         ply
