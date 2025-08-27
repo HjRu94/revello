@@ -32,7 +32,7 @@ pub enum Piece {
     White
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Eq, Copy)]
 pub struct Ply(u64);
 
 #[derive(PartialEq)]

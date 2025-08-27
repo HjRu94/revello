@@ -15,35 +15,12 @@ pub struct MinMaxPlayer {
 impl Player for MinMaxPlayer {
     fn generate_ply(&self, board: &Board, time_left: Duration) -> Ply{
 
-        let response = min_max(board.clone(), 6);
+        let mut alpha = MinMaxResponse::MIN;
+        let mut beta = MinMaxResponse::MAX;
+        let response = min_max(board.clone(), 8, &mut alpha, &mut beta);
         let ply = response.ply.expect("invalid move");
 
         ply
 
-    }
-}
-
-#[derive(Clone)]
-pub struct HumanPlayer {
-
-}
-
-impl Player for HumanPlayer {
-
-    fn generate_ply(&self, board: &Board, time_left: Duration) -> Ply {
-        loop {
-            draw_playable(&board);
-            let ply = detect_ply();
-            if ply == None {
-            }
-            else {
-                let ply = ply.expect("ply is None");
-                for p in possible_plys(&board) {
-                    if ply == p {
-                        return ply;
-                    }
-                }
-            }
-        }
     }
 }
