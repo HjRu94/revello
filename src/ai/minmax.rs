@@ -1,7 +1,7 @@
 use crate::board::board::{Board, Ply, possible_plys, play, Player};
 use std::cmp::{Ordering, max, min};
 use crate::ai::static_evaluation::{static_eval};
-use crate::ai::transposition_table::{TranspositionTable, TranspositionEntry};
+use crate::ai::transposition_table::{TranspositionTable, TranspositionEntry, move_ordering};
 
 
 #[derive(Copy, Clone, PartialEq, Hash)]
@@ -50,6 +50,9 @@ impl MinMaxResponse {
             eval: MinMaxEval::ZERO,
             ply: unsafe {Some(Ply::new_unchecked(0))}
         };
+    pub fn set_ply(&mut self, ply: Ply) {
+        self.ply = Some(ply)
+    }
 }
 
 impl PartialEq for MinMaxEval {
@@ -100,7 +103,7 @@ pub fn min_max(board: Board, depth: u32, alpha: &MinMaxEval, beta: &MinMaxEval, 
     // Maximizing player
     if board.turn == Some(Player::Black) {
         let mut best_move = MinMaxResponse::MIN;
-        for ply in plys {
+        for ply in move_ordering(&board, &transposition_table, depth) {
             let new_board = play(&board, ply.clone());
             let min_max_val = min_max(new_board, depth - 1, &alpha, &beta, transposition_table);
 
@@ -121,7 +124,7 @@ pub fn min_max(board: Board, depth: u32, alpha: &MinMaxEval, beta: &MinMaxEval, 
     // Minimizing player
     else {
         let mut best_move = MinMaxResponse::MAX;
-        for ply in plys {
+        for ply in move_ordering(&board, &transposition_table, depth) {
             let new_board = play(&board, ply.clone());
             let min_max_val = min_max(new_board, depth - 1, &alpha, &beta, transposition_table);
 
