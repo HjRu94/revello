@@ -4,13 +4,13 @@ use crate::ai::static_evaluation::{static_eval};
 use crate::ai::transposition_table::{TranspositionTable, TranspositionEntry};
 
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Hash)]
 pub struct MinMaxResponse {
     pub eval: MinMaxEval,
     pub ply: Option<Ply>
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Hash)]
 pub struct MinMaxEval {
     pub value: i32
 }
@@ -73,22 +73,24 @@ impl Ord for MinMaxEval {
 }
 
 pub fn min_max(board: Board, depth: u32, alpha: &MinMaxEval, beta: &MinMaxEval, transposition_table: &mut TranspositionTable) -> MinMaxResponse {
-    if let Some(lookup_response) = transposition_table.get(&TranspositionEntry::new(board.clone(), depth)) {
-        return lookup_response;
+    if let Some(lookup_response) = transposition_table.get(&board) {
+        if lookup_response.get_depth() >= depth {
+            return lookup_response.get_minmax_response();
+        }
     }
 
     if depth == 0 {
         let response = static_eval(&board);
-        let entry = TranspositionEntry::new(board, depth);
-        transposition_table.insert(entry, response);
+        let entry = TranspositionEntry::new(response, depth);
+        transposition_table.insert(board, entry);
         return response;
     }
     let plys = possible_plys(&board);
 
     if plys.is_zero() {
         let response = static_eval(&board);
-        let entry = TranspositionEntry::new(board, depth);
-        transposition_table.insert(entry, response);
+        let entry = TranspositionEntry::new(response, depth);
+        transposition_table.insert(board, entry);
         return response;
     }
 
@@ -113,7 +115,7 @@ pub fn min_max(board: Board, depth: u32, alpha: &MinMaxEval, beta: &MinMaxEval, 
                 break;
             }
         }
-        transposition_table.insert(TranspositionEntry::new(board, depth), best_move);
+        transposition_table.insert(board, TranspositionEntry::new(best_move, depth));
         return best_move;
     }
     // Minimizing player
@@ -134,7 +136,7 @@ pub fn min_max(board: Board, depth: u32, alpha: &MinMaxEval, beta: &MinMaxEval, 
                 break;
             }
         }
-        transposition_table.insert(TranspositionEntry::new(board, depth), best_move);
+        transposition_table.insert(board, TranspositionEntry::new(best_move, depth));
         return best_move;
     }
 }

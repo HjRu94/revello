@@ -2,23 +2,32 @@ use crate::board::board::{Board};
 use crate::ai::minmax::{MinMaxResponse};
 use std::collections::HashMap;
 
-#[derive(Hash, Eq, PartialEq)]
+#[derive(Hash, PartialEq, Copy, Clone)]
 pub struct TranspositionEntry {
-    board: Board,
+    minmax_response: MinMaxResponse,
     depth: u32,
 }
 
 impl TranspositionEntry {
-    pub fn new(board: Board, depth: u32) -> Self{
+    pub fn get_depth(&self) -> u32 {
+        self.depth
+    }
+    pub fn get_minmax_response(&self) -> MinMaxResponse {
+        self.minmax_response
+    }
+}
+
+impl TranspositionEntry {
+    pub fn new(minmax_response: MinMaxResponse, depth: u32) -> Self{
         return TranspositionEntry{
-            board: board,
+            minmax_response: minmax_response,
             depth: depth
         }
     }
 }
 
 pub struct TranspositionTable {
-    table: HashMap<TranspositionEntry, MinMaxResponse>
+    table: HashMap<Board, TranspositionEntry>
 }
 
 impl TranspositionTable {
@@ -28,11 +37,11 @@ impl TranspositionTable {
         }
     }
 
-    pub fn get(&self, entry: &TranspositionEntry) -> Option<MinMaxResponse> {
-        self.table.get(entry).copied()
+    pub fn get(&self, board: &Board) -> Option<TranspositionEntry> {
+        self.table.get(board).copied()
     }
 
-    pub fn insert(&mut self, entry: TranspositionEntry, value: MinMaxResponse) {
-        self.table.insert(entry, value);
+    pub fn insert(&mut self, board: Board, entry: TranspositionEntry) {
+        self.table.insert(board, entry);
     }
 }
