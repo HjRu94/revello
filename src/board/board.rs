@@ -153,7 +153,7 @@ impl Ply {
         }
     }
     pub fn from_row_col(row: usize, col:usize) -> Option<Self> {
-        if 0 <= row && row < 8 && 0 <= col && col < 8 {
+        if row < 8 && col < 8 {
             let index: u64 = row as u64 * 8 + col as u64;
             return Self::new(1 << index);
         }

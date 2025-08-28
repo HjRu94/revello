@@ -1,5 +1,6 @@
 use crate::board::board::{Board, Ply, possible_plys, play, Player};
 use std::cmp::{Ordering, max, min};
+use crate::ai::static_evaluation::{static_eval};
 
 
 #[derive(Eq, Copy, Clone)]
@@ -38,20 +39,6 @@ impl Ord for MinMaxResponse {
     fn cmp(&self, other: &Self) -> Ordering {
         self.eval.cmp(&other.eval)
     }
-}
-
-fn static_eval(board: Board) -> MinMaxResponse {
-    let black_pieces: i32 = board.black.count_ones().try_into().unwrap();
-    let white_pieces: i32 = board.white.count_ones().try_into().unwrap();
-
-    let eval: i32 = black_pieces - white_pieces;
-
-    let ret = MinMaxResponse {
-        eval: eval,
-        ply: None
-    };
-
-    return ret;
 }
 
 pub fn min_max(board: Board, depth: u32, alpha: &mut MinMaxResponse, beta: &mut MinMaxResponse) -> MinMaxResponse {

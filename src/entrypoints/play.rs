@@ -1,5 +1,5 @@
 use crate::graphics::graphics::{draw_board, detect_ply, draw_playable};
-use crate::board::board::{Board, START_BOARD, Player, play, Ply};
+use crate::board::board::{START_BOARD, Player, play, Ply};
 use crate::ai::player::{MinMaxPlayer, Player as AiPlayer};
 use macroquad::prelude::next_frame;
 

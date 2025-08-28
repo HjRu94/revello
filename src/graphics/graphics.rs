@@ -19,7 +19,7 @@ pub fn detect_ply() -> Option<Ply> {
     }
     let mut row: Option<usize> = None;
     let mut col: Option<usize> = None;
-    let (mut mouse_x, mut mouse_y) = mouse_position();
+    let (mouse_x, mouse_y) = mouse_position();
     for i in 0..8 {
         for j in 0..8 {
             if MARGIN + i as f32 * SQUARE_SIZE <= mouse_x && mouse_x <= MARGIN + (i as f32 + 1.0) * SQUARE_SIZE {
