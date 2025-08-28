@@ -24,6 +24,11 @@ impl MinMaxEval {
         MinMaxEval {
             value: i32::MIN,
         };
+
+    pub const ZERO: MinMaxEval =
+        MinMaxEval {
+            value: 0,
+        };
 }
 
 impl MinMaxResponse {
@@ -36,6 +41,12 @@ impl MinMaxResponse {
     pub const MIN: MinMaxResponse =
         MinMaxResponse {
             eval: MinMaxEval::MIN,
+            ply: unsafe {Some(Ply::new_unchecked(0))}
+        };
+
+    pub const ZERO: MinMaxResponse =
+        MinMaxResponse {
+            eval: MinMaxEval::ZERO,
             ply: unsafe {Some(Ply::new_unchecked(0))}
         };
 }

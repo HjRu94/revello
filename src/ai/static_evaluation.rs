@@ -2,8 +2,21 @@ use crate::ai::minmax::{MinMaxResponse, MinMaxEval};
 use crate::board::board::{Board, Ply, Plys};
 
 pub fn static_eval(board: Board) -> MinMaxResponse {
+
     let black_pieces: i32 = board.black.count_ones().try_into().unwrap();
     let white_pieces: i32 = board.white.count_ones().try_into().unwrap();
+
+    if board.turn == None {
+        if black_pieces - white_pieces > 0 {
+            return MinMaxResponse::MAX;
+        }
+        else if white_pieces - black_pieces < 0 {
+            return MinMaxResponse::MIN;
+        }
+        else {
+            return MinMaxResponse::ZERO;
+        }
+    }
 
     let black: u64 = board.black.into();
     let white: u64 = board.white.into();
