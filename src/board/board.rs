@@ -14,14 +14,14 @@
 // 56 57 58 59 60 61 62 63
 
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Hash, Eq)]
 pub struct Board {
     pub black: u64,
     pub white: u64,
     pub turn: Option<Player>,
 }
 
-#[derive(PartialEq, Clone, Copy)]
+#[derive(PartialEq, Clone, Copy, Hash, Eq)]
 pub enum Player {
     Black,
     White,

@@ -1,6 +1,7 @@
 use crate::board::board::{Board, Ply, possible_plys, play, Player};
 use std::cmp::{Ordering, max, min};
 use crate::ai::static_evaluation::{static_eval};
+use crate::ai::transposition_table::{TranspositionTable, TranspositionEntry};
 
 
 #[derive(Copy, Clone)]
@@ -71,14 +72,24 @@ impl Ord for MinMaxEval {
     }
 }
 
-pub fn min_max(board: Board, depth: u32, alpha: &MinMaxEval, beta: &MinMaxEval) -> MinMaxResponse {
+pub fn min_max(board: Board, depth: u32, alpha: &MinMaxEval, beta: &MinMaxEval, transposition_table: &mut TranspositionTable) -> MinMaxResponse {
+    if let Some(lookup_response) = transposition_table.get(&TranspositionEntry::new(board.clone(), depth)) {
+        return lookup_response;
+    }
+
     if depth == 0 {
-        return static_eval(board);
+        let response = static_eval(&board);
+        let entry = TranspositionEntry::new(board, depth);
+        transposition_table.insert(entry, response);
+        return response;
     }
     let plys = possible_plys(&board);
 
     if plys.is_zero() {
-        return static_eval(board);
+        let response = static_eval(&board);
+        let entry = TranspositionEntry::new(board, depth);
+        transposition_table.insert(entry, response);
+        return response;
     }
 
     let mut alpha = alpha.clone();
@@ -89,7 +100,7 @@ pub fn min_max(board: Board, depth: u32, alpha: &MinMaxEval, beta: &MinMaxEval) 
         let mut best_move = MinMaxResponse::MIN;
         for ply in plys {
             let new_board = play(&board, ply.clone());
-            let min_max_val = min_max(new_board, depth - 1, &alpha, &beta);
+            let min_max_val = min_max(new_board, depth - 1, &alpha, &beta, transposition_table);
 
             if min_max_val.eval >= best_move.eval {
                 best_move.eval = min_max_val.eval;
@@ -102,6 +113,7 @@ pub fn min_max(board: Board, depth: u32, alpha: &MinMaxEval, beta: &MinMaxEval) 
                 break;
             }
         }
+        transposition_table.insert(TranspositionEntry::new(board, depth), best_move);
         return best_move;
     }
     // Minimizing player
@@ -109,7 +121,7 @@ pub fn min_max(board: Board, depth: u32, alpha: &MinMaxEval, beta: &MinMaxEval) 
         let mut best_move = MinMaxResponse::MAX;
         for ply in plys {
             let new_board = play(&board, ply.clone());
-            let min_max_val = min_max(new_board, depth - 1, &alpha, &beta);
+            let min_max_val = min_max(new_board, depth - 1, &alpha, &beta, transposition_table);
 
             if min_max_val.eval <= best_move.eval {
                 best_move.eval = min_max_val.eval;
@@ -122,6 +134,7 @@ pub fn min_max(board: Board, depth: u32, alpha: &MinMaxEval, beta: &MinMaxEval) 
                 break;
             }
         }
+        transposition_table.insert(TranspositionEntry::new(board, depth), best_move);
         return best_move;
     }
 }
