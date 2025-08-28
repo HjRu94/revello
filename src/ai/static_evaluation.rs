@@ -1,4 +1,4 @@
-use crate::ai::minmax::MinMaxResponse;
+use crate::ai::minmax::{MinMaxResponse, MinMaxEval};
 use crate::board::board::{Board, Ply, Plys};
 
 pub fn static_eval(board: Board) -> MinMaxResponse {
@@ -28,29 +28,19 @@ pub fn static_eval(board: Board) -> MinMaxResponse {
 
     //detect safe squares
 
-    let mut bs_ne: u64 = 0;
-    let mut bs_nw: u64 = 0;
-    let mut bs_se: u64 = 0;
-    let mut bs_sw: u64 = 0;
+    let mut bs_nw = black & (black << 1 | !l) & (black << 8 | !t) & (black << 9 | !tl) & (black << 7 | black >> 7 | !tl);
+    let mut ws_nw = white & (white << 1 | !l) & (white << 8 | !t) & (white << 9 | !tl) & (white << 7 | white >> 7 | !tl);
 
-    let mut ws_ne: u64 = 0;
-    let mut ws_nw: u64 = 0;
-    let mut ws_se: u64 = 0;
-    let mut ws_sw: u64 = 0;
+    let mut bs_ne = black & (black >> 1 | !r) & (black << 8 | !t) & (black << 7 | !tr) & (black << 9 | black >> 9 | !tr);
+    let mut ws_ne = white & (white >> 1 | !r) & (white << 8 | !t) & (white << 7 | !tr) & (white << 9 | white >> 9 | !tr);
 
-    bs_nw = black & (black << 1 | !l) & (black << 8 | !t) & (black << 9 | !tl) & (black << 7 | black >> 7 | !tl);
-    ws_nw = white & (white << 1 | !l) & (white << 8 | !t) & (white << 9 | !tl) & (white << 7 | white >> 7 | !tl);
+    let mut bs_se = black & (black >> 1 | !r) & (black >> 8 | !b) & (black >> 9 | !br) & (black << 7 | black >> 7 | !br);
+    let mut ws_se = white & (white >> 1 | !r) & (white >> 8 | !b) & (white >> 9 | !br) & (white << 7 | white >> 7 | !br);
 
-    bs_ne = black & (black >> 1 | !r) & (black << 8 | !t) & (black << 7 | !tr) & (black << 9 | black >> 9 | !tr);
-    ws_ne = white & (white >> 1 | !r) & (white << 8 | !t) & (white << 7 | !tr) & (white << 9 | white >> 9 | !tr);
+    let mut bs_sw = black & (black << 1 | !l) & (black >> 8 | !b) & (black >> 7 | !bl) & (black << 9 | black >> 9 | !bl);
+    let mut ws_sw = white & (white << 1 | !l) & (white >> 8 | !b) & (white >> 7 | !bl) & (white << 9 | white >> 9 | !bl);
 
-    bs_se = black & (black >> 1 | !r) & (black >> 8 | !b) & (black >> 9 | !br) & (black << 7 | black >> 7 | !br);
-    ws_se = white & (white >> 1 | !r) & (white >> 8 | !b) & (white >> 9 | !br) & (white << 7 | white >> 7 | !br);
-
-    bs_sw = black & (black << 1 | !l) & (black >> 8 | !b) & (black >> 7 | !bl) & (black << 9 | black >> 9 | !bl);
-    ws_sw = white & (white << 1 | !l) & (white >> 8 | !b) & (white >> 7 | !bl) & (white << 9 | white >> 9 | !bl);
-
-    for i in 1..5 {
+    for _ in 1..5 {
         bs_nw = black & (bs_nw << 1 | !l) & (bs_nw << 8 | !t) & (bs_nw << 9 | !tl) & (bs_nw << 7 | bs_nw >> 7 | !tl);
         ws_nw = white & (ws_nw << 1 | !l) & (ws_nw << 8 | !t) & (ws_nw << 9 | !tl) & (ws_nw << 7 | ws_nw >> 7 | !tl);
 
@@ -73,7 +63,7 @@ pub fn static_eval(board: Board) -> MinMaxResponse {
     let eval: i32 = black_pieces - white_pieces + 10 * (n_black_safe - n_white_safe);
 
     let ret = MinMaxResponse {
-        eval: eval,
+        eval: MinMaxEval {value: eval},
         ply: None
     };
 

@@ -192,6 +192,9 @@ impl Plys {
         }
         ret
     }
+    pub fn is_zero(&self) -> bool {
+        self.0 == 0
+    }
 }
 
 impl IntoIterator for Plys {
