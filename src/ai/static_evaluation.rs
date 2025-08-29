@@ -65,7 +65,21 @@ pub fn static_eval(board: &Board) -> MinMaxResponse {
     let n_black_safe: i32 = black_safe.count_ones().try_into().unwrap();
     let n_white_safe: i32 = white_safe.count_ones().try_into().unwrap();
 
-    let eval: i32 = black_pieces - white_pieces + 10 * (n_black_safe - n_white_safe);
+    let n_black_x: i32 = (
+        ((!black & 1 << 00) << 9 & black) |
+        ((!black & 1 << 07) << 7 & black) |
+        ((!black & 1 << 56) >> 7 & black) |
+        ((!black & 1 << 63) >> 9 & black)
+    ).count_ones().try_into().unwrap();
+
+    let n_white_x: i32 = (
+        ((!white & 1 << 00) << 9 & white) |
+        ((!white & 1 << 07) << 7 & white) |
+        ((!white & 1 << 56) >> 7 & white) |
+        ((!white & 1 << 63) >> 9 & white)
+    ).count_ones().try_into().unwrap();
+
+    let eval: i32 = black_pieces - white_pieces + 10 * (n_black_safe - n_white_safe) - 10 * (n_black_x - n_white_x);
 
     let ret = MinMaxResponse {
         eval: MinMaxEval {value: eval},
