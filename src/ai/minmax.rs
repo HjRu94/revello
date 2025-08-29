@@ -16,6 +16,11 @@ pub struct MinMaxEval {
 }
 
 impl MinMaxEval {
+    pub fn new(value: i32) -> Self{
+        return MinMaxEval {
+            value: value
+        }
+    }
     pub const MAX: MinMaxEval =
         MinMaxEval {
             value: i32::MAX,
@@ -33,6 +38,12 @@ impl MinMaxEval {
 }
 
 impl MinMaxResponse {
+    pub fn new_empty_ply(eval: MinMaxEval) -> Self {
+        return MinMaxResponse {
+            eval: eval,
+            ply: None,
+        }
+    }
     pub const MAX: MinMaxResponse =
         MinMaxResponse {
             eval: MinMaxEval::MAX,

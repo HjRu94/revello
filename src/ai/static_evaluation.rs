@@ -8,10 +8,10 @@ pub fn static_eval(board: &Board) -> MinMaxResponse {
 
     if board.turn == None {
         if black_pieces - white_pieces > 0 {
-            return MinMaxResponse::MAX;
+            return MinMaxResponse::new_empty_ply(MinMaxEval::new(i32::MAX - 64 + black_pieces - white_pieces));
         }
-        else if white_pieces - black_pieces < 0 {
-            return MinMaxResponse::MIN;
+        else if white_pieces - black_pieces > 0 {
+            return MinMaxResponse::new_empty_ply(MinMaxEval::new(i32::MIN + 64 + white_pieces - black_pieces));
         }
         else {
             return MinMaxResponse::ZERO;

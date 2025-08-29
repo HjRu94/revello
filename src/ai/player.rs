@@ -23,7 +23,7 @@ impl Player for MinMaxPlayer {
 
         let start = Instant::now(); // start timer
 
-        for depth in 1..9 {
+        for depth in 1..7 {
             response = min_max(board.clone(), depth as u32, &alpha, &beta, &mut transposition_table);
         }
 
