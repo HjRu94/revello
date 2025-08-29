@@ -46,9 +46,6 @@ impl TranspositionTable {
     }
 }
 
-static mut counter1: i32 = 0;
-static mut counter2: i32 = 0;
-
 pub fn move_ordering(
     board: &Board,
     transposition_table: &TranspositionTable,
@@ -66,9 +63,6 @@ pub fn move_ordering(
         let val = transposition_table.get(&new_board);
         if let Some(transposition_entry) = transposition_table.get(&new_board) {
             let eval = transposition_entry.get_minmax_response().eval;
-            unsafe {
-                counter1 +=1;
-            }
             return (ply, eval);
         }
         let mut eval = match board.turn {
@@ -76,16 +70,9 @@ pub fn move_ordering(
             Some(Player::Black) => MinMaxEval::MIN,
             None => MinMaxEval::ZERO,
         };
-        unsafe {
-            counter2 += 1;
-        }
         (ply, eval)
     }).collect();
 
-    unsafe {
-        //println!("Have Done stuff: {}", counter1);
-        //println!("Haven't Done stuff: {}", counter2);
-    }
 
     // Sort descending so best moves come first
     if board.turn == Some(Player::Black) {
