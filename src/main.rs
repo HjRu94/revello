@@ -54,7 +54,18 @@ enum AiType {
     Random,
 }
 
-#[macroquad::main("my game")]
+use macroquad::prelude::Conf;
+
+fn window_conf() -> Conf {
+    Conf {
+        window_title: "Revello".to_owned(),
+        window_width: 2000,
+        window_height: 2000,
+        ..Default::default()
+    }
+}
+
+#[macroquad::main(window_conf)]
 async fn main() {
     let cli = Cli::parse();
     use crate::entrypoints::play::{human_vs_ai, human_vs_human, ai_vs_ai};
