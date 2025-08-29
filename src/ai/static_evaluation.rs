@@ -1,5 +1,5 @@
 use crate::ai::minmax::{MinMaxResponse, MinMaxEval};
-use crate::board::board::{Board, Ply, Plys};
+use crate::board::board::{Board, Ply, Plys, possible_plys, Player};
 
 pub fn static_eval(board: &Board) -> MinMaxResponse {
 
@@ -79,7 +79,17 @@ pub fn static_eval(board: &Board) -> MinMaxResponse {
         ((!white & 1 << 63) >> 9 & white)
     ).count_ones().try_into().unwrap();
 
-    let eval: i32 = black_pieces - white_pieces + 10 * (n_black_safe - n_white_safe) - 10 * (n_black_x - n_white_x);
+    let player_plys: u64 = possible_plys(&board).into();
+
+    let mut flip_board = board.clone();
+    flip_board.flip_turn();
+
+    let opponent_plys: u64 = possible_plys(&flip_board).into();
+
+    let n_black_plys: i32 = if board.turn == Some(Player::Black) {player_plys.count_ones().try_into().unwrap()} else {opponent_plys.count_ones().try_into().unwrap()};
+    let n_white_plys: i32 = if board.turn == Some(Player::White) {player_plys.count_ones().try_into().unwrap()} else {opponent_plys.count_ones().try_into().unwrap()};
+
+    let eval: i32 = n_black_plys - n_white_plys + 10 * (n_black_safe - n_white_safe) - 10 * (n_black_x - n_white_x);
 
     let ret = MinMaxResponse {
         eval: MinMaxEval {value: eval},

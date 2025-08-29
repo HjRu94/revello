@@ -32,10 +32,12 @@ impl Player for MinMaxPlayer {
             else {
                 break;
             }
-            depth += 1;
-            if depth > 60 {
+
+            if depth >= 60 {
                 break;
             }
+
+            depth += 1;
         }
 
         let duration = start.elapsed(); // time elapsed
