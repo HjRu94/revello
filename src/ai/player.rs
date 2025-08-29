@@ -22,13 +22,25 @@ impl Player for MinMaxPlayer {
         use std::time::Instant;
 
         let start = Instant::now(); // start timer
+        let allowed_thinking_time = Duration::from_secs(1);
+        let mut depth = 1;
 
-        for depth in 1..7 {
-            response = min_max(board.clone(), depth as u32, &alpha, &beta, &mut transposition_table);
+        while true {
+            if let Some(res) = min_max(board.clone(), depth as u32, &alpha, &beta, &mut transposition_table, start, allowed_thinking_time) {
+                response = res;
+            }
+            else {
+                break;
+            }
+            depth += 1;
+            if depth > 60 {
+                break;
+            }
         }
 
         let duration = start.elapsed(); // time elapsed
         println!("Eval: {}", response.eval.value);
+        println!("Depth: {}", depth);
         println!("Time elapsed: {:?}", duration);
 
         let ply = response.ply.expect("invalid move");
