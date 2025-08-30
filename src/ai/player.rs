@@ -22,7 +22,7 @@ impl Player for MinMaxPlayer {
         use std::time::Instant;
 
         let start = Instant::now(); // start timer
-        let allowed_thinking_time = Duration::from_secs(1);
+        let allowed_thinking_time = Duration::from_millis(500);
         let mut depth = 1;
 
         while true {

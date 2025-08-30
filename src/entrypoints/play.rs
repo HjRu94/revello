@@ -1,4 +1,4 @@
-use crate::graphics::graphics::{draw_board, detect_ply, draw_playable};
+use crate::graphics::graphics::{draw_board, detect_ply, draw_playable, draw_time, draw_timers};
 use crate::board::board::{START_BOARD, Player, play, Ply};
 use crate::ai::player::{MinMaxPlayer, Player as AiPlayer};
 use macroquad::prelude::next_frame;
@@ -7,10 +7,17 @@ use std::thread;
 use std::sync::{Arc, Mutex};
 use std::sync::atomic::{Ordering, AtomicBool};
 
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 pub async fn ai_vs_ai() {
     let mut board = START_BOARD.clone();
+
+    let total_time = Duration::from_secs(300);
+
+    let mut black_time = total_time.clone();
+    let mut white_time = total_time.clone();
+
+    let start_time = Instant::now(); // start timer
 
     let ai_player1: MinMaxPlayer = MinMaxPlayer{};
     let ai_player2: MinMaxPlayer = MinMaxPlayer{};
@@ -21,6 +28,14 @@ pub async fn ai_vs_ai() {
     let ai_thinking = Arc::new(AtomicBool::new(false));
 
     loop {
+
+        if board.turn == Some(Player::Black) {
+            black_time = 2 * total_time - (Instant::now() - start_time) - white_time;
+        }
+        else if board.turn == Some(Player::White) {
+            white_time = 2 * total_time - (Instant::now() - start_time) - black_time;
+        }
+
         draw_board(&board);
 
         if board.turn == Some(Player::Black)
@@ -67,11 +82,20 @@ pub async fn ai_vs_ai() {
             board = play(&board, ply);
         }
 
+        draw_timers(&black_time, &white_time, board.turn == Some(Player::Black));
         next_frame().await;
     }
 }
 
 pub async fn human_vs_ai() {
+
+    let total_time = Duration::from_secs(300);
+
+    let mut black_time = total_time.clone();
+    let mut white_time = total_time.clone();
+
+    let start_time = Instant::now(); // start timer
+                                     //
     let mut board = START_BOARD.clone();
 
     let ai_player: MinMaxPlayer = MinMaxPlayer{};
@@ -81,6 +105,13 @@ pub async fn human_vs_ai() {
 
     loop {
         draw_board(&board);
+
+        if board.turn == Some(Player::Black) {
+            black_time = 2 * total_time - (Instant::now() - start_time) - white_time;
+        }
+        else if board.turn == Some(Player::White) {
+            white_time = 2 * total_time - (Instant::now() - start_time) - black_time;
+        }
 
         if board.turn == Some(Player::Black)
             && ai_player_move.lock().unwrap().is_none()
@@ -112,13 +143,26 @@ pub async fn human_vs_ai() {
             board = play(&board, ply);
         }
 
+        draw_timers(&black_time, &white_time, board.turn == Some(Player::Black));
+
         next_frame().await;
     }
 }
 pub async fn human_vs_human() {
     let mut board = START_BOARD.clone();
+    let total_time = Duration::from_secs(300);
 
+    let mut black_time = total_time.clone();
+    let mut white_time = total_time.clone();
+
+    let start_time = Instant::now(); // start timer
     loop {
+        if board.turn == Some(Player::Black) {
+            black_time = 2 * total_time - (Instant::now() - start_time) - white_time;
+        }
+        else if board.turn == Some(Player::White) {
+            white_time = 2 * total_time - (Instant::now() - start_time) - black_time;
+        }
         let ply = detect_ply();
 
         if ply != None {
@@ -126,6 +170,9 @@ pub async fn human_vs_human() {
         }
         draw_board(&board);
         draw_playable(&board);
+
+        draw_timers(&black_time, &white_time, board.turn == Some(Player::Black));
+
         next_frame().await;
     }
 }
