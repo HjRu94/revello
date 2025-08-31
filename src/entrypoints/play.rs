@@ -12,7 +12,7 @@ use std::time::{Duration, Instant};
 pub async fn ai_vs_ai() {
     let mut board = START_BOARD.clone();
 
-    let total_time = Duration::from_secs(300);
+    let total_time = Duration::from_secs(30);
 
     let mut black_time = total_time.clone();
     let mut white_time = total_time.clone();
@@ -28,16 +28,31 @@ pub async fn ai_vs_ai() {
     let ai_thinking = Arc::new(AtomicBool::new(false));
 
     loop {
-
-        if board.turn == Some(Player::Black) {
-            black_time = 2 * total_time - (Instant::now() - start_time) - white_time;
-        }
-        else if board.turn == Some(Player::White) {
-            white_time = 2 * total_time - (Instant::now() - start_time) - black_time;
-        }
-
+        // draw
+        next_frame().await;
         draw_board(&board);
+        draw_timers(&black_time, &white_time, board.turn == Some(Player::Black));
 
+        // Time keeping
+        if board.turn == Some(Player::Black) {
+            let elapsed = Instant::now() - start_time;
+            if let Some(remaining) = (2 * total_time).checked_sub(elapsed + white_time) {
+                black_time = remaining;
+            } else {
+                black_time = Duration::from_secs(0);
+                continue;
+            }
+        } else if board.turn == Some(Player::White) {
+            let elapsed = Instant::now() - start_time;
+            if let Some(remaining) = (2 * total_time).checked_sub(elapsed + black_time) {
+                white_time = remaining;
+            } else {
+                white_time = Duration::from_secs(0);
+                continue;
+            }
+        }
+
+        // move gen
         if board.turn == Some(Player::Black)
             && ai_player1_move.lock().unwrap().is_none()
             && !ai_thinking.load(Ordering::SeqCst)
@@ -82,14 +97,12 @@ pub async fn ai_vs_ai() {
             board = play(&board, ply);
         }
 
-        draw_timers(&black_time, &white_time, board.turn == Some(Player::Black));
-        next_frame().await;
     }
 }
 
 pub async fn human_vs_ai() {
 
-    let total_time = Duration::from_secs(300);
+    let total_time = Duration::from_secs(30);
 
     let mut black_time = total_time.clone();
     let mut white_time = total_time.clone();
@@ -104,15 +117,31 @@ pub async fn human_vs_ai() {
     let ai_thinking = Arc::new(AtomicBool::new(false));
 
     loop {
+        // draw
+        next_frame().await;
         draw_board(&board);
+        draw_timers(&black_time, &white_time, board.turn == Some(Player::Black));
 
+        // Time Keeping
         if board.turn == Some(Player::Black) {
-            black_time = 2 * total_time - (Instant::now() - start_time) - white_time;
-        }
-        else if board.turn == Some(Player::White) {
-            white_time = 2 * total_time - (Instant::now() - start_time) - black_time;
+            let elapsed = Instant::now() - start_time;
+            if let Some(remaining) = (2 * total_time).checked_sub(elapsed + white_time) {
+                black_time = remaining;
+            } else {
+                black_time = Duration::from_secs(0);
+                continue;
+            }
+        } else if board.turn == Some(Player::White) {
+            let elapsed = Instant::now() - start_time;
+            if let Some(remaining) = (2 * total_time).checked_sub(elapsed + black_time) {
+                white_time = remaining;
+            } else {
+                white_time = Duration::from_secs(0);
+                continue;
+            }
         }
 
+        // move gen
         if board.turn == Some(Player::Black)
             && ai_player_move.lock().unwrap().is_none()
             && !ai_thinking.load(Ordering::SeqCst)
@@ -143,36 +172,49 @@ pub async fn human_vs_ai() {
             board = play(&board, ply);
         }
 
-        draw_timers(&black_time, &white_time, board.turn == Some(Player::Black));
-
-        next_frame().await;
     }
 }
 pub async fn human_vs_human() {
     let mut board = START_BOARD.clone();
-    let total_time = Duration::from_secs(300);
+    let total_time = Duration::from_secs(30);
 
     let mut black_time = total_time.clone();
     let mut white_time = total_time.clone();
 
     let start_time = Instant::now(); // start timer
     loop {
+        // Draw
+        next_frame().await;
+        draw_board(&board);
+        draw_timers(&black_time, &white_time, board.turn == Some(Player::Black));
+
+        // time keeping
         if board.turn == Some(Player::Black) {
-            black_time = 2 * total_time - (Instant::now() - start_time) - white_time;
+            let elapsed = Instant::now() - start_time;
+            if let Some(remaining) = (2 * total_time).checked_sub(elapsed + white_time) {
+                black_time = remaining;
+            } else {
+                black_time = Duration::from_secs(0);
+                continue;
+            }
+        } else if board.turn == Some(Player::White) {
+            let elapsed = Instant::now() - start_time;
+            if let Some(remaining) = (2 * total_time).checked_sub(elapsed + black_time) {
+                white_time = remaining;
+            } else {
+                white_time = Duration::from_secs(0);
+                continue;
+            }
         }
-        else if board.turn == Some(Player::White) {
-            white_time = 2 * total_time - (Instant::now() - start_time) - black_time;
-        }
+
+
+
+        // Move gen
+        draw_playable(&board);
         let ply = detect_ply();
 
         if ply != None {
             board = play(&board, ply.expect("Ply is none"));
         }
-        draw_board(&board);
-        draw_playable(&board);
-
-        draw_timers(&black_time, &white_time, board.turn == Some(Player::Black));
-
-        next_frame().await;
     }
 }
