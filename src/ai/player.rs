@@ -4,6 +4,7 @@ use crate::ai::minmax::{min_max, MinMaxResponse, MinMaxEval};
 use crate::ai::transposition_table::{TranspositionTable};
 use crate::graphics::graphics::{draw_playable, detect_ply};
 use std::sync::{Arc, Mutex};
+use std::thread;
 
 pub trait Player {
     fn update(&mut self, _board: &Board) {
@@ -97,6 +98,7 @@ impl Player for HumanPlayer {
                     return ply;
                 }
             }
+            thread::sleep(Duration::from_millis(16)); // ~60 checks/sec
         }
     }
 }
