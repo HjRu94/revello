@@ -59,7 +59,7 @@ use macroquad::prelude::Conf;
 fn window_conf() -> Conf {
     Conf {
         window_title: "Revello".to_owned(),
-        window_width: 2000,
+        window_width: 3100,
         window_height: 2000,
         ..Default::default()
     }
