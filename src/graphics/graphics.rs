@@ -19,7 +19,9 @@ const GRID_COLOR: Color = BLACK;
 
 const TIMER_BOX_HEIGHT: f32 = 200.0;
 const TIMER_BOX_WIDTH: f32 = 450.0;
-const TIMER_BOX_COLOR: Color = Color::new(0.55, 0.55, 0.55, 1.0);
+const TIMER_BOX_TURN_COLOR: Color = Color::new(0.50, 0.50, 0.50, 1.0);
+const TIMER_BOX_NOT_TURN_COLOR: Color = Color::new(0.70, 0.70, 0.70, 1.0);
+const TIMEOUT_COLOR: Color = Color::new(0.80, 0.55, 0.55, 1.0);
 const TIMER_FONT_SIZE: f32 = 200.0;
 const TIMER_FONT_COLOR: Color = BLACK;
 
@@ -56,10 +58,11 @@ pub fn draw_timers(black_time: &Duration, white_time: &Duration, is_black_turn: 
 }
 
 pub fn draw_time(x: f32, y: f32, time: &Duration, is_turn: bool, player: Player) {
-    let microseconds: i32 = time.as_micros().try_into().unwrap();
-    let seconds = microseconds / 1000000;
+    let total_micros: i32 = time.as_micros().try_into().unwrap();
+
+    let seconds = total_micros / 1000000;
     let minuites = seconds / 60;
-    let microseconds = microseconds % 1000000;
+    let microseconds = total_micros % 1000000;
     let seconds = seconds % 60;
     let circle_color = if player == Player::Black {BLACK_COLOR} else {WHITE_COLOR};
     let separator = if !is_turn {':'}
@@ -72,7 +75,14 @@ pub fn draw_time(x: f32, y: f32, time: &Duration, is_turn: bool, player: Player)
     else {
         format!("{}{}{}", minuites, separator, seconds)
     };
-    draw_rectangle(x, y, TIMER_BOX_WIDTH, TIMER_BOX_HEIGHT, TIMER_BOX_COLOR);
+    let timer_box_color = if total_micros == 0 {
+        TIMEOUT_COLOR
+    }
+    else {
+        if is_turn {TIMER_BOX_TURN_COLOR} else {TIMER_BOX_NOT_TURN_COLOR}
+    };
+    // if time is up
+    draw_rectangle(x, y, TIMER_BOX_WIDTH, TIMER_BOX_HEIGHT, timer_box_color);
     draw_circle(x + SQUARE_SIZE / 2.0, y + TIMER_BOX_HEIGHT / 2.0, CIRCLE_RADIUS, circle_color);
     draw_text(&time_string, x + SQUARE_SIZE, y + TIMER_BOX_HEIGHT / 2.0 + TIMER_FONT_SIZE / 4.0 , TIMER_FONT_SIZE, TIMER_FONT_COLOR);
 }
