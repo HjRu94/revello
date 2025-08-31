@@ -182,6 +182,10 @@ impl Ply {
         let col = idx % 8;
         (row, col)
     }
+
+    pub fn is_in(&self, plys: Plys) -> bool {
+        return self.0 & plys.0 != 0;
+    }
 }
 
 impl Plys {

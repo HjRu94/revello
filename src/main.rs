@@ -1,4 +1,6 @@
-// Board struct using bitboards to represent the othello board
+use crate::ai::player::{MinMaxPlayer, HumanPlayer};
+use crate::board::board::{Player};
+use std::time::Duration;
 
 mod board;
 mod ai;
@@ -39,6 +41,8 @@ enum PlayMode {
 
     /// Human vs AI game
     HumanVsAi(AiOptions),
+
+    PlayerVsPlayer,
 }
 
 #[derive(Args)]
@@ -68,7 +72,7 @@ fn window_conf() -> Conf {
 #[macroquad::main(window_conf)]
 async fn main() {
     let cli = Cli::parse();
-    use crate::entrypoints::play::{human_vs_ai, human_vs_human, ai_vs_ai};
+    use crate::entrypoints::play::{human_vs_ai, human_vs_human, ai_vs_ai, player_vs_player};
 
     match cli.command {
         Commands::Play(play_mode) => match play_mode {
@@ -86,6 +90,15 @@ async fn main() {
                 //TODO Implement Human vs AI
                 println!("Human vs AI with {:?} AI", opts.ai);
                 human_vs_ai().await;
+            }
+            PlayMode::PlayerVsPlayer => {
+                //TODO Implement Human vs AI
+                println!("Player vs Player");
+                let black_time = Duration::from_secs(30);
+                let white_time = Duration::from_secs(90);
+                let mut black_player: MinMaxPlayer = MinMaxPlayer::new();
+                let mut white_player: HumanPlayer = HumanPlayer::new(Player::White);
+                player_vs_player(&mut black_player, &mut white_player, black_time, white_time).await;
             }
         },
         Commands::Analyse { file } => {
