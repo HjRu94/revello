@@ -80,7 +80,7 @@ pub fn draw_time(x: f32, y: f32, time: &Duration, is_turn: bool, player: Player)
         format!("{}{}{}", seconds, separator, microseconds / 10000)
     }
     else {
-        format!("{}{}{}", minuites, separator, seconds)
+        format!("{}{}{:02}", minuites, separator, seconds)
     };
     let timer_box_color = if total_micros == 0 {
         TIMEOUT_COLOR
