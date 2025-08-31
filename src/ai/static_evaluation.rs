@@ -1,5 +1,5 @@
 use crate::ai::minmax::{MinMaxResponse, MinMaxEval};
-use crate::board::board::{Board, Ply, Plys, possible_plys, Player};
+use crate::board::board::{Board, possible_plys, Player};
 
 pub fn static_eval(board: &Board) -> MinMaxResponse {
 

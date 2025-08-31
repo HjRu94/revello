@@ -62,9 +62,6 @@ impl MinMaxResponse {
             eval: MinMaxEval::ZERO,
             ply: unsafe {Some(Ply::new_unchecked(0))}
         };
-    pub fn set_ply(&mut self, ply: Ply) {
-        self.ply = Some(ply)
-    }
 }
 
 impl PartialEq for MinMaxEval {

@@ -1,6 +1,6 @@
-use crate::graphics::graphics::{draw_board, detect_ply, draw_playable, draw_time, draw_timers, draw_side_pannel};
+use crate::graphics::graphics::{draw_board, draw_timers, draw_side_pannel};
 use crate::board::board::{START_BOARD, Player, play, Ply};
-use crate::ai::player::{MinMaxPlayer, HumanPlayer, Player as AiPlayer};
+use crate::ai::player::{Player as AiPlayer};
 use macroquad::prelude::next_frame;
 
 use std::thread;
