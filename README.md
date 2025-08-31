@@ -23,16 +23,12 @@ The search engine includes several techniques:
 You can run the program in different modes using Cargo:
 
 ``` bash
-# 🧑‍🤝‍🧑 vs 🧑‍🤝‍🧑 Play human vs human
-cargo run -- play human-vs-human
+# start a game
+cargo run -- play --black <player_type> --white <player_type> [--black-time <seconds>] [--white-time <seconds>]
 
-# Play human vs AI
-# 🤖 vs 🧑 Play human vs AI
-cargo run -- play human-vs-ai
+# 🧑 vs 🤖 Play human vs AI with 5 minutes for the human and 30 seconds for the bot
+cargo run -- play --black human --white minmax --black-time 300 --white-time 30
 
-# Play AI vs AI
-# 🤖 vs 🤖 Play AI vs AI
-cargo run -- play ai-vs-ai
 ```
 
 ## 🛠️ Implementation details

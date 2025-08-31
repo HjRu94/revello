@@ -1,4 +1,4 @@
-use crate::board::board::{Board, Ply, Plys, play, Player, possible_plys};
+use crate::board::board::{Board, Ply, play, Player, possible_plys};
 use crate::ai::minmax::{MinMaxResponse, MinMaxEval};
 use std::collections::HashMap;
 
@@ -60,12 +60,11 @@ pub fn move_ordering(
     }
     let mut scored_moves: Vec<(Ply, MinMaxEval)> = plys.into_iter().map(|ply| {
         let new_board = play(board, ply.clone());
-        let val = transposition_table.get(&new_board);
         if let Some(transposition_entry) = transposition_table.get(&new_board) {
             let eval = transposition_entry.get_minmax_response().eval;
             return (ply, eval);
         }
-        let mut eval = match board.turn {
+        let eval = match board.turn {
             Some(Player::White) => MinMaxEval::MAX,
             Some(Player::Black) => MinMaxEval::MIN,
             None => MinMaxEval::ZERO,

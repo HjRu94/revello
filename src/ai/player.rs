@@ -1,15 +1,32 @@
-use crate::board::board::{Board, Ply};
+use crate::board::board::{Board, Ply, possible_plys, Player as BoardPlayer};
 use std::time::Duration;
 use crate::ai::minmax::{min_max, MinMaxResponse, MinMaxEval};
-use crate::ai::transposition_table::{TranspositionTable, move_ordering};
+use crate::ai::transposition_table::{TranspositionTable};
+use crate::graphics::graphics::{draw_playable, detect_ply};
+use std::sync::{Arc, Mutex};
 
 pub trait Player {
+    fn update(&mut self, _board: &Board) {
+
+    }
     fn generate_ply(&self, board: &Board, time_left: Duration) -> Ply;
 }
 
 #[derive(Clone)]
 pub struct MinMaxPlayer {
 
+}
+
+#[derive(Clone)]
+pub struct HumanPlayer {
+    selected_ply: Arc<Mutex<Option<Ply>>>,
+    player: BoardPlayer
+}
+
+impl MinMaxPlayer {
+    pub fn new() -> Self {
+        return MinMaxPlayer{};
+    }
 }
 
 impl Player for MinMaxPlayer {
@@ -26,7 +43,7 @@ impl Player for MinMaxPlayer {
         let allowed_thinking_time = Duration::from_secs_f32(time_left.as_secs_f32() * factor);
         let mut depth = 1;
 
-        while true {
+        loop {
             if let Some(res) = min_max(board.clone(), depth as u32, &alpha, &beta, &mut transposition_table, start, allowed_thinking_time) {
                 response = res;
             }
@@ -50,5 +67,36 @@ impl Player for MinMaxPlayer {
 
         ply
 
+    }
+}
+
+impl HumanPlayer {
+    pub fn new(player: BoardPlayer) -> Self {
+        HumanPlayer {
+            selected_ply: Arc::new(Mutex::new(None)),
+            player: player,
+        }
+    }
+}
+
+impl Player for HumanPlayer {
+    fn update(&mut self, board: &Board) {
+        if let Some(turn) = board.turn {
+            if turn == self.player {
+                draw_playable(&board);
+                let mut sel = self.selected_ply.lock().unwrap();
+                *sel = detect_ply();
+            }
+        }
+    }
+
+    fn generate_ply(&self, board: &Board, _time_left: Duration) -> Ply {
+        loop {
+            if let Some(ply) = *self.selected_ply.lock().unwrap() {
+                if ply.is_in(possible_plys(board)) {
+                    return ply;
+                }
+            }
+        }
     }
 }

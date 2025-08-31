@@ -1,11 +1,13 @@
-// Board struct using bitboards to represent the othello board
+use crate::ai::player::{MinMaxPlayer, HumanPlayer};
+use crate::board::board::Player;
+use std::time::Duration;
 
 mod board;
 mod ai;
 mod graphics;
 mod entrypoints;
 
-use clap::{Parser, Subcommand, Args, ValueEnum};
+use clap::{Parser, Subcommand, Args};
 
 #[derive(Parser)]
 #[command(name = "game-cli")]
@@ -18,8 +20,7 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     /// Play the game
-    #[command(subcommand)]
-    Play(PlayMode),
+    Play(PlayOptions),
 
     /// Analyse a game
     Analyse {
@@ -29,29 +30,41 @@ enum Commands {
     },
 }
 
-#[derive(Subcommand)]
-enum PlayMode {
-    /// AI vs AI game
-    AiVsAi(AiOptions),
-
-    /// Human vs Human game
-    HumanVsHuman,
-
-    /// Human vs AI game
-    HumanVsAi(AiOptions),
-}
-
 #[derive(Args)]
-struct AiOptions {
-    /// Select which AI to use
-    #[arg(short = 'a', long = "ai", value_enum, default_value_t = AiType::MinMax)]
-    ai: AiType,
+struct PlayOptions {
+    /// Who plays as black (human, minmax)
+    #[arg(long)]
+    black: PlayerType,
+
+    /// Who plays as white (human, minmax)
+    #[arg(long)]
+    white: PlayerType,
+
+    /// Time for black (seconds)
+    #[arg(long, default_value_t = 300)]
+    black_time: u64,
+
+    /// Time for white (seconds)
+    #[arg(long, default_value_t = 300)]
+    white_time: u64,
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum, Debug)]
-enum AiType {
+#[derive(Clone, Debug)]
+enum PlayerType {
+    Human,
     MinMax,
-    Random,
+}
+
+impl std::str::FromStr for PlayerType {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "human" => Ok(PlayerType::Human),
+            "minmax" => Ok(PlayerType::MinMax),
+            _ => Err(format!("Invalid player type: {}", s)),
+        }
+    }
 }
 
 use macroquad::prelude::Conf;
@@ -68,26 +81,36 @@ fn window_conf() -> Conf {
 #[macroquad::main(window_conf)]
 async fn main() {
     let cli = Cli::parse();
-    use crate::entrypoints::play::{human_vs_ai, human_vs_human, ai_vs_ai};
+    use crate::entrypoints::play::player_vs_player;
 
     match cli.command {
-        Commands::Play(play_mode) => match play_mode {
-            PlayMode::AiVsAi(opts) => {
-                //TODO Implement Ai vs Ai
-                println!("AI vs AI with {:?} AI", opts.ai);
-                ai_vs_ai().await;
+        Commands::Play(opts) => {
+            let black_time = Duration::from_secs(opts.black_time);
+            let white_time = Duration::from_secs(opts.white_time);
+
+            match (opts.black, opts.white) {
+                (PlayerType::Human, PlayerType::Human) => {
+                    let mut black = HumanPlayer::new(Player::Black);
+                    let mut white = HumanPlayer::new(Player::White);
+                    player_vs_player(&mut black, &mut white, black_time, white_time).await;
+                }
+                (PlayerType::Human, PlayerType::MinMax) => {
+                    let mut black = HumanPlayer::new(Player::Black);
+                    let mut white = MinMaxPlayer::new();
+                    player_vs_player(&mut black, &mut white, black_time, white_time).await;
+                }
+                (PlayerType::MinMax, PlayerType::Human) => {
+                    let mut black = MinMaxPlayer::new();
+                    let mut white = HumanPlayer::new(Player::White);
+                    player_vs_player(&mut black, &mut white, black_time, white_time).await;
+                }
+                (PlayerType::MinMax, PlayerType::MinMax) => {
+                    let mut black = MinMaxPlayer::new();
+                    let mut white = MinMaxPlayer::new();
+                    player_vs_player(&mut black, &mut white, black_time, white_time).await;
+                }
             }
-            PlayMode::HumanVsHuman => {
-                //TODO Implement human vs human
-                println!("Human vs Human");
-                human_vs_human().await;
-            }
-            PlayMode::HumanVsAi(opts) => {
-                //TODO Implement Human vs AI
-                println!("Human vs AI with {:?} AI", opts.ai);
-                human_vs_ai().await;
-            }
-        },
+        }
         Commands::Analyse { file } => {
             println!("Analysing file: {}", file);
         }
