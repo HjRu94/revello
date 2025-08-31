@@ -226,8 +226,8 @@ pub async fn human_vs_human() {
 pub async fn player_vs_player<T, U>(
     black_player: &mut T,
     white_player: &mut U,
-    white_time: Duration,
     black_time: Duration,
+    white_time: Duration,
     )
 where
     T: AiPlayer + Clone + std::marker::Send + 'static,
