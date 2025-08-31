@@ -56,15 +56,22 @@ pub fn draw_timers(black_time: &Duration, white_time: &Duration, is_black_turn: 
 }
 
 pub fn draw_time(x: f32, y: f32, time: &Duration, is_turn: bool, player: Player) {
-    let seconds: i32 = time.as_secs().try_into().unwrap();
+    let microseconds: i32 = time.as_micros().try_into().unwrap();
+    let seconds = microseconds / 1000000;
     let minuites = seconds / 60;
+    let microseconds = microseconds % 1000000;
     let seconds = seconds % 60;
     let circle_color = if player == Player::Black {BLACK_COLOR} else {WHITE_COLOR};
     let separator = if !is_turn {':'}
     else {
         if seconds % 2 == 0 {':'} else {' '}
     };
-    let time_string = format!("{}{}{}", minuites, separator, seconds);
+    let time_string = if minuites == 0 && seconds < 10 {
+        format!("{}{}{}", seconds, separator, microseconds / 10000)
+    }
+    else {
+        format!("{}{}{}", minuites, separator, seconds)
+    };
     draw_rectangle(x, y, TIMER_BOX_WIDTH, TIMER_BOX_HEIGHT, TIMER_BOX_COLOR);
     draw_circle(x + SQUARE_SIZE / 2.0, y + TIMER_BOX_HEIGHT / 2.0, CIRCLE_RADIUS, circle_color);
     draw_text(&time_string, x + SQUARE_SIZE, y + TIMER_BOX_HEIGHT / 2.0 + TIMER_FONT_SIZE / 4.0 , TIMER_FONT_SIZE, TIMER_FONT_COLOR);
