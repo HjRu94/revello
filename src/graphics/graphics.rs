@@ -19,9 +19,18 @@ const GRID_COLOR: Color = BLACK;
 
 const TIMER_BOX_HEIGHT: f32 = 200.0;
 const TIMER_BOX_WIDTH: f32 = 450.0;
-const TIMER_BOX_COLOR: Color = Color::new(0.55, 0.55, 0.55, 1.0);
+const TIMER_BOX_TURN_COLOR: Color = Color::new(0.50, 0.50, 0.50, 1.0);
+const TIMER_BOX_NOT_TURN_COLOR: Color = Color::new(0.70, 0.70, 0.70, 1.0);
+const TIMEOUT_COLOR: Color = Color::new(0.80, 0.55, 0.55, 1.0);
 const TIMER_FONT_SIZE: f32 = 200.0;
 const TIMER_FONT_COLOR: Color = BLACK;
+
+// Side Pannel Parameters
+const SIDE_PANNEL_COLOR: Color = Color::new(0.70, 0.70, 0.70, 1.0); 
+const SIDE_PANNEL_FONT_COLOR: Color = BLACK;
+const SIDE_PANNEL_FONT_SIZE: f32 = 160.0; // recomended to be 4x CIRCLE_RADIUS
+const SIDE_PANNEL_HEIGHT: f32 = 200.0;
+const SIDE_PANNEL_WIDTH: f32 = 450.0;
 
 pub fn detect_ply() -> Option<Ply> {
     if !is_mouse_button_pressed(MouseButton::Left) {
@@ -56,10 +65,11 @@ pub fn draw_timers(black_time: &Duration, white_time: &Duration, is_black_turn: 
 }
 
 pub fn draw_time(x: f32, y: f32, time: &Duration, is_turn: bool, player: Player) {
-    let microseconds: i32 = time.as_micros().try_into().unwrap();
-    let seconds = microseconds / 1000000;
+    let total_micros: i32 = time.as_micros().try_into().unwrap();
+
+    let seconds = total_micros / 1000000;
     let minuites = seconds / 60;
-    let microseconds = microseconds % 1000000;
+    let microseconds = total_micros % 1000000;
     let seconds = seconds % 60;
     let circle_color = if player == Player::Black {BLACK_COLOR} else {WHITE_COLOR};
     let separator = if !is_turn {':'}
@@ -72,7 +82,14 @@ pub fn draw_time(x: f32, y: f32, time: &Duration, is_turn: bool, player: Player)
     else {
         format!("{}{}{}", minuites, separator, seconds)
     };
-    draw_rectangle(x, y, TIMER_BOX_WIDTH, TIMER_BOX_HEIGHT, TIMER_BOX_COLOR);
+    let timer_box_color = if total_micros == 0 {
+        TIMEOUT_COLOR
+    }
+    else {
+        if is_turn {TIMER_BOX_TURN_COLOR} else {TIMER_BOX_NOT_TURN_COLOR}
+    };
+    // if time is up
+    draw_rectangle(x, y, TIMER_BOX_WIDTH, TIMER_BOX_HEIGHT, timer_box_color);
     draw_circle(x + SQUARE_SIZE / 2.0, y + TIMER_BOX_HEIGHT / 2.0, CIRCLE_RADIUS, circle_color);
     draw_text(&time_string, x + SQUARE_SIZE, y + TIMER_BOX_HEIGHT / 2.0 + TIMER_FONT_SIZE / 4.0 , TIMER_FONT_SIZE, TIMER_FONT_COLOR);
 }
@@ -92,6 +109,18 @@ pub fn draw_playable(board: &Board) {
 fn draw_ply(ply: Ply, color: Color) {
     let (row, col) = ply.to_row_col();
     draw_circle(MARGIN + (col as f32 + 0.5) * SQUARE_SIZE, MARGIN + (row as f32 + 0.5) * SQUARE_SIZE, PLAYABLE_CIRCLE_RADIUS, color);
+}
+
+pub fn draw_side_pannel(board: &Board) {
+    let top_left_x = 2.0 * MARGIN + 8.0 * SQUARE_SIZE;
+    let top_left_y = MARGIN + 4.0 * SQUARE_SIZE - 0.5 * SIDE_PANNEL_HEIGHT;
+    let n_black = format!("{}", board.count_black());
+    let n_white = format!("{}", board.count_white());
+    draw_rectangle(top_left_x, top_left_y, SIDE_PANNEL_WIDTH, SIDE_PANNEL_HEIGHT, SIDE_PANNEL_COLOR);
+    draw_circle(top_left_x + SQUARE_SIZE * 0.5, top_left_y + SQUARE_SIZE * 0.5, CIRCLE_RADIUS, BLACK_COLOR);
+    draw_circle(top_left_x + SQUARE_SIZE * 0.5, top_left_y + SIDE_PANNEL_HEIGHT - SQUARE_SIZE * 0.5, CIRCLE_RADIUS, WHITE_COLOR);
+    draw_text(&n_black, top_left_x + SQUARE_SIZE, top_left_y + 0.5 * SQUARE_SIZE + CIRCLE_RADIUS, SIDE_PANNEL_FONT_SIZE, SIDE_PANNEL_FONT_COLOR);
+    draw_text(&n_white, top_left_x + SQUARE_SIZE, top_left_y + SIDE_PANNEL_HEIGHT - 0.5 * SQUARE_SIZE + CIRCLE_RADIUS, SIDE_PANNEL_FONT_SIZE, SIDE_PANNEL_FONT_COLOR);
 }
 
 pub fn draw_board(board: &Board) {

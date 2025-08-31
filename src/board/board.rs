@@ -73,6 +73,14 @@ impl Board {
     pub fn get_turn(&self) -> Option<Player> {
         return self.turn;
     }
+
+    pub fn count_black(&self) -> i32 {
+        return self.black.count_ones().try_into().unwrap();
+    }
+
+    pub fn count_white(&self) -> i32 {
+        return self.white.count_ones().try_into().unwrap();
+    }
 }
 
 pub const START_BOARD: Board = Board {

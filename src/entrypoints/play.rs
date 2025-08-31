@@ -1,4 +1,4 @@
-use crate::graphics::graphics::{draw_board, detect_ply, draw_playable, draw_time, draw_timers};
+use crate::graphics::graphics::{draw_board, detect_ply, draw_playable, draw_time, draw_timers, draw_side_pannel};
 use crate::board::board::{START_BOARD, Player, play, Ply};
 use crate::ai::player::{MinMaxPlayer, Player as AiPlayer};
 use macroquad::prelude::next_frame;
@@ -31,6 +31,7 @@ pub async fn ai_vs_ai() {
         // draw
         next_frame().await;
         draw_board(&board);
+        draw_side_pannel(&board);
         draw_timers(&black_time, &white_time, board.turn == Some(Player::Black));
 
         // Time keeping
@@ -120,6 +121,7 @@ pub async fn human_vs_ai() {
         // draw
         next_frame().await;
         draw_board(&board);
+        draw_side_pannel(&board);
         draw_timers(&black_time, &white_time, board.turn == Some(Player::Black));
 
         // Time Keeping
@@ -186,6 +188,7 @@ pub async fn human_vs_human() {
         // Draw
         next_frame().await;
         draw_board(&board);
+        draw_side_pannel(&board);
         draw_timers(&black_time, &white_time, board.turn == Some(Player::Black));
 
         // time keeping
