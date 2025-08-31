@@ -22,7 +22,8 @@ impl Player for MinMaxPlayer {
         use std::time::Instant;
 
         let start = Instant::now(); // start timer
-        let allowed_thinking_time = Duration::from_millis(500);
+        let factor = 2.0 / (64.0 - board.count_pieces() as f32);
+        let allowed_thinking_time = Duration::from_secs_f32(time_left.as_secs_f32() * factor);
         let mut depth = 1;
 
         while true {

@@ -66,7 +66,7 @@ pub async fn ai_vs_ai() {
             ai_thinking.store(true, Ordering::SeqCst);
 
             thread::spawn( move || {
-                let ply = ai_player1_clone.generate_ply(&board_clone, Duration::new(0, 0));
+                let ply = ai_player1_clone.generate_ply(&board_clone, black_time);
                 *ai_player1_move_clone.lock().unwrap() = Some(ply);
                 ai_thinking_clone.store(false, Ordering::SeqCst);
                     });
@@ -84,7 +84,7 @@ pub async fn ai_vs_ai() {
             ai_thinking.store(true, Ordering::SeqCst);
 
             thread::spawn( move || {
-                let ply = ai_player2_clone.generate_ply(&board_clone, Duration::new(0, 0));
+                let ply = ai_player2_clone.generate_ply(&board_clone, white_time);
                 *ai_player2_move_clone.lock().unwrap() = Some(ply);
                 ai_thinking_clone.store(false, Ordering::SeqCst);
                     });
@@ -103,7 +103,7 @@ pub async fn ai_vs_ai() {
 
 pub async fn human_vs_ai() {
 
-    let total_time = Duration::from_secs(30);
+    let total_time = Duration::from_secs(90);
 
     let mut black_time = total_time.clone();
     let mut white_time = total_time.clone();
@@ -156,7 +156,7 @@ pub async fn human_vs_ai() {
             ai_thinking.store(true, Ordering::SeqCst);
 
             thread::spawn( move || {
-                let ply = ai_player_clone.generate_ply(&board_clone, Duration::new(0, 0));
+                let ply = ai_player_clone.generate_ply(&board_clone, black_time);
                 *ai_player_move_clone.lock().unwrap() = Some(ply);
                 ai_thinking_clone.store(false, Ordering::SeqCst);
                     });

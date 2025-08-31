@@ -74,6 +74,10 @@ impl Board {
         return self.turn;
     }
 
+    pub fn count_pieces(&self) -> i32 {
+        return (self.black | self.white).count_ones().try_into().unwrap();
+    }
+
     pub fn count_black(&self) -> i32 {
         return self.black.count_ones().try_into().unwrap();
     }
