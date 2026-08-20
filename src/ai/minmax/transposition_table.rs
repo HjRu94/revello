@@ -1,5 +1,5 @@
-use crate::board::board::{Board, Ply, play, Player, possible_plys};
-use crate::ai::minmax::{MinMaxResponse, MinMaxEval};
+use crate::ai::minmax::minmax::{MinMaxEval, MinMaxResponse};
+use crate::board::board::{play, possible_plys, Board, Player, Ply};
 use std::collections::HashMap;
 
 #[derive(Hash, PartialEq, Copy, Clone)]
@@ -18,23 +18,23 @@ impl TranspositionEntry {
 }
 
 impl TranspositionEntry {
-    pub fn new(minmax_response: MinMaxResponse, depth: u32) -> Self{
-        return TranspositionEntry{
+    pub fn new(minmax_response: MinMaxResponse, depth: u32) -> Self {
+        return TranspositionEntry {
             minmax_response: minmax_response,
-            depth: depth
-        }
+            depth: depth,
+        };
     }
 }
 
 pub struct TranspositionTable {
-    table: HashMap<Board, TranspositionEntry>
+    table: HashMap<Board, TranspositionEntry>,
 }
 
 impl TranspositionTable {
     pub fn new() -> Self {
         return TranspositionTable {
-            table: HashMap::new()
-        }
+            table: HashMap::new(),
+        };
     }
 
     pub fn get(&self, board: &Board) -> Option<TranspositionEntry> {
@@ -58,26 +58,27 @@ pub fn move_ordering(
     if plys.is_zero() {
         return vec![];
     }
-    let mut scored_moves: Vec<(Ply, MinMaxEval)> = plys.into_iter().map(|ply| {
-        let new_board = play(board, ply.clone());
-        if let Some(transposition_entry) = transposition_table.get(&new_board) {
-            let eval = transposition_entry.get_minmax_response().eval;
-            return (ply, eval);
-        }
-        let eval = match board.turn {
-            Some(Player::White) => MinMaxEval::MAX,
-            Some(Player::Black) => MinMaxEval::MIN,
-            None => MinMaxEval::ZERO,
-        };
-        (ply, eval)
-    }).collect();
-
+    let mut scored_moves: Vec<(Ply, MinMaxEval)> = plys
+        .into_iter()
+        .map(|ply| {
+            let new_board = play(board, ply.clone());
+            if let Some(transposition_entry) = transposition_table.get(&new_board) {
+                let eval = transposition_entry.get_minmax_response().eval;
+                return (ply, eval);
+            }
+            let eval = match board.turn {
+                Some(Player::White) => MinMaxEval::MAX,
+                Some(Player::Black) => MinMaxEval::MIN,
+                None => MinMaxEval::ZERO,
+            };
+            (ply, eval)
+        })
+        .collect();
 
     // Sort descending so best moves come first
     if board.turn == Some(Player::Black) {
         scored_moves.sort_by(|a, b| b.1.cmp(&a.1));
-    }
-    else if board.turn == Some(Player::White) {
+    } else if board.turn == Some(Player::White) {
         scored_moves.sort_by(|a, b| a.1.cmp(&b.1));
     }
 

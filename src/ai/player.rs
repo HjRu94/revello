@@ -1,38 +1,33 @@
-use crate::board::board::{Board, Ply, possible_plys, Player as BoardPlayer};
-use std::time::Duration;
-use crate::ai::minmax::{min_max, MinMaxResponse, MinMaxEval};
-use crate::ai::transposition_table::{TranspositionTable};
-use crate::graphics::graphics::{draw_playable, detect_ply};
+use crate::ai::minmax::minmax::{min_max, MinMaxEval, MinMaxResponse};
+use crate::ai::minmax::transposition_table::TranspositionTable;
+use crate::board::board::{possible_plys, Board, Player as BoardPlayer, Ply};
+use crate::graphics::graphics::{detect_ply, draw_playable};
 use std::sync::{Arc, Mutex};
 use std::thread;
+use std::time::Duration;
 
 pub trait Player {
-    fn update(&mut self, _board: &Board) {
-
-    }
+    fn update(&mut self, _board: &Board) {}
     fn generate_ply(&self, board: &Board, time_left: Duration) -> Ply;
 }
 
 #[derive(Clone)]
-pub struct MinMaxPlayer {
-
-}
+pub struct MinMaxPlayer {}
 
 #[derive(Clone)]
 pub struct HumanPlayer {
     selected_ply: Arc<Mutex<Option<Ply>>>,
-    player: BoardPlayer
+    player: BoardPlayer,
 }
 
 impl MinMaxPlayer {
     pub fn new() -> Self {
-        return MinMaxPlayer{};
+        return MinMaxPlayer {};
     }
 }
 
 impl Player for MinMaxPlayer {
-    fn generate_ply(&self, board: &Board, time_left: Duration) -> Ply{
-
+    fn generate_ply(&self, board: &Board, time_left: Duration) -> Ply {
         let alpha = MinMaxEval::MIN;
         let beta = MinMaxEval::MAX;
         let mut transposition_table = TranspositionTable::new();
@@ -45,10 +40,17 @@ impl Player for MinMaxPlayer {
         let mut depth = 1;
 
         loop {
-            if let Some(res) = min_max(board.clone(), depth as u32, &alpha, &beta, &mut transposition_table, start, allowed_thinking_time) {
+            if let Some(res) = min_max(
+                board.clone(),
+                depth as u32,
+                &alpha,
+                &beta,
+                &mut transposition_table,
+                start,
+                allowed_thinking_time,
+            ) {
                 response = res;
-            }
-            else {
+            } else {
                 break;
             }
 
@@ -67,7 +69,6 @@ impl Player for MinMaxPlayer {
         let ply = response.ply.expect("invalid move");
 
         ply
-
     }
 }
 

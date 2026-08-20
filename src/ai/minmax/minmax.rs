@@ -1,7 +1,7 @@
 use crate::board::board::{Board, Ply, possible_plys, play, Player};
 use std::cmp::{Ordering, max, min};
-use crate::ai::static_evaluation::{static_eval};
-use crate::ai::transposition_table::{TranspositionTable, TranspositionEntry, move_ordering};
+use crate::ai::minmax::static_evaluation::{static_eval};
+use crate::ai::minmax::transposition_table::{TranspositionTable, TranspositionEntry, move_ordering};
 use std::time::{Instant, Duration};
 
 
